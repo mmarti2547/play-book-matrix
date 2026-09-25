@@ -221,7 +221,19 @@ select s.*,
   -- best Kalshi YES buy: PBM probability minus the price you would pay
   case when km.home_yes_ask is null then null
        when s.adj_home_win - km.home_yes_ask >= (1 - s.adj_home_win) - km.away_yes_ask then s.home_team else s.away_team end as kalshi_value_side,
-  round(100 * greatest(s.adj_home_win - km.home_yes_ask, (1 - s.adj_home_win) - km.away_yes_ask), 1) as kalshi_value_pts
+  round(100 * greatest(s.adj_home_win - km.home_yes_ask, (1 - s.adj_home_win) - km.away_yes_ask), 1) as kalshi_value_pts,
+  -- Vegas view (4th opinion): no-vig moneyline win probability (falls back to the spread when no moneyline)
+  round(coalesce(s.market_home_prob, s.spread_home_prob), 4) as vegas_home_prob,
+  case when coalesce(s.market_home_prob, s.spread_home_prob) is null then null
+       when coalesce(s.market_home_prob, s.spread_home_prob) >= 0.5 then s.home_team else s.away_team end as vegas_winner,
+  round(greatest(coalesce(s.market_home_prob, s.spread_home_prob), 1 - coalesce(s.market_home_prob, s.spread_home_prob)), 4) as vegas_winner_prob,
+  case when s.spread_line > 0 then s.home_team when s.spread_line < 0 then s.away_team end as vegas_favorite,
+  abs(s.spread_line) as vegas_fav_points,
+  round(100 * (greatest(s.adj_home_win, 1 - s.adj_home_win)
+        - case when s.adj_home_win >= 0.5 then coalesce(s.market_home_prob, s.spread_home_prob)
+               else 1 - coalesce(s.market_home_prob, s.spread_home_prob) end), 1) as vegas_edge_pts,
+  (coalesce(s.market_home_prob, s.spread_home_prob) is not null
+     and (coalesce(s.market_home_prob, s.spread_home_prob) >= 0.5) = (s.adj_home_win >= 0.5)) as pbm_agrees_with_vegas
 from scored s left join expert_consensus ec using (game_id) left join kalshi_markets km using (game_id);
 
 -- ===== Game-day sheets (Thu / Sat / Sun / Mon ...), frozen at the slate's first kickoff =====
@@ -310,7 +322,9 @@ select rank() over (partition by b.season, b.week order by b.predicted_winner_pr
   round(b.ats_pick_prob, 4) as ats_pick_prob, b.rating, b.bet_score, b.risk_rating, round(b.risk_index, 3) as risk_index, b.units,
   b.consensus_pick, b.expert_count, b.total_line,
   b.kalshi_winner, b.kalshi_winner_prob, b.kalshi_home_prob, b.kalshi_edge_pts, b.pbm_agrees_with_kalshi,
-  b.kalshi_value_side, b.kalshi_value_pts, b.kalshi_updated_at
+  b.kalshi_value_side, b.kalshi_value_pts, b.kalshi_updated_at,
+  b.vegas_winner, b.vegas_winner_prob, b.vegas_home_prob, b.vegas_favorite, b.vegas_fav_points,
+  b.home_moneyline, b.away_moneyline, b.vegas_edge_pts, b.pbm_agrees_with_vegas
 from game_board b
 where b.home_score is null;
 
@@ -344,7 +358,10 @@ select g.game_date_et, g.slate, g.season, g.week, g.e->>'game_id' as game_id, g.
        when (g.predicted_winner = g.home_team) = (g.home_margin > 0) then 'WIN' else 'LOSS' end as su_result,
   g.e->>'kalshi_winner' as kalshi_winner, (g.e->>'kalshi_winner_prob')::numeric as kalshi_winner_prob,
   case when g.e->>'kalshi_winner' is null then null when g.home_margin = 0 then 'PUSH'
-       when (g.e->>'kalshi_winner' = g.home_team) = (g.home_margin > 0) then 'WIN' else 'LOSS' end as kalshi_su_result
+       when (g.e->>'kalshi_winner' = g.home_team) = (g.home_margin > 0) then 'WIN' else 'LOSS' end as kalshi_su_result,
+  g.e->>'vegas_winner' as vegas_winner,
+  case when g.e->>'vegas_winner' is null then null when g.home_margin = 0 then 'PUSH'
+       when (g.e->>'vegas_winner' = g.home_team) = (g.home_margin > 0) then 'WIN' else 'LOSS' end as vegas_su_result
 from g;
 
 create view dashboard_stats with (security_invoker = on) as
@@ -359,6 +376,7 @@ scopes as (
   union all select season, 'agree_ats', 'PBM + experts agree', 7, ats_result, units, true from r where agrees
   union all select season, 'kalshi_su', 'Kalshi favorite straight-up', 8, kalshi_su_result, 0, false from r where kalshi_su_result is not null
   union all select season, 'pbm_kalshi_agree_su', 'PBM + Kalshi agree (SU)', 9, su_result, 0, false from r where kalshi_winner = predicted_winner
+  union all select season, 'vegas_su', 'Vegas favorite straight-up', 8, vegas_su_result, 0, false from r where vegas_su_result is not null
   union all select season, 'grade_' || rating, 'Grade ' || rating, 10, ats_result, units, true from r where rating is not null
   union all select season, 'slate_' || slate, slate || ' sheet', 20, ats_result, units, true from r
 )
@@ -395,10 +413,11 @@ select r.season, r.week, wk.games_scheduled, wk.games_final, (wk.games_final = w
   count(*) filter (where rating in ('A+','A') and ats_result = 'LOSS') as a_losses,
   count(*) filter (where consensus_result = 'WIN') as consensus_wins, count(*) filter (where consensus_result = 'LOSS') as consensus_losses,
   count(*) filter (where kalshi_su_result = 'WIN') as kalshi_su_wins, count(*) filter (where kalshi_su_result = 'LOSS') as kalshi_su_losses,
+  count(*) filter (where vegas_su_result = 'WIN') as vegas_su_wins, count(*) filter (where vegas_su_result = 'LOSS') as vegas_su_losses,
   jsonb_agg(jsonb_build_object('rank', week_rank, 'game_id', game_id, 'matchup', away_team || ' @ ' || home_team,
      'score', away_score || '-' || home_score, 'predicted_winner', predicted_winner, 'prob', predicted_winner_prob,
      'su', su_result, 'ats_pick', ats_pick, 'spread_line', spread_line, 'ats', ats_result, 'rating', rating,
-     'bet_score', bet_score, 'units', units, 'kalshi_winner', kalshi_winner, 'kalshi_su', kalshi_su_result) order by week_rank) as games
+     'bet_score', bet_score, 'units', units, 'kalshi_winner', kalshi_winner, 'kalshi_su', kalshi_su_result, 'vegas_winner', vegas_winner, 'vegas_su', vegas_su_result) order by week_rank) as games
 from r join wk using (season, week)
 group by r.season, r.week, wk.games_scheduled, wk.games_final;
 
