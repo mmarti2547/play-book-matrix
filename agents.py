@@ -49,11 +49,13 @@ def main():
     # expert picks: current week = week of the next unplayed game
     nxt = games[games.kickoff_utc > now].iloc[0] if (games.kickoff_utc > now).any() else None
     if nxt is not None and et.dayofweek in (0, 2, 3, 4, 5, 6):  # Mon, Wed-Sun
+        # most handicappers release free plays Thu-Sun, so rescan every 5 hours then; once a day Mon/Wed
+        gap = pd.Timedelta(hours=5) if et.dayofweek in (3, 4, 5, 6) else pd.Timedelta(hours=20)
         season, week = int(nxt.season), int(nxt.week)
         experts = get("experts?select=id,name&active=is.true")
         scans = {s["expert_id"]: pd.Timestamp(s["scanned_at"]) for s in
                  get(f"expert_scans?select=expert_id,scanned_at&season=eq.{season}&week=eq.{week}")}
-        due = [e["id"] for e in experts if e["id"] not in scans or now - scans[e["id"]] > pd.Timedelta(hours=20)]
+        due = [e["id"] for e in experts if e["id"] not in scans or now - scans[e["id"]] > gap]
         with ThreadPoolExecutor(max_workers=5) as ex:
             list(ex.map(lambda i: invoke("pbm-expert-agent", {"expert_id": i, "season": season, "week": week}), due))
 
