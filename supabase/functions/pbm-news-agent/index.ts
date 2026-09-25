@@ -54,10 +54,30 @@ Rules:
   decisions, weather, unclear reports).
 Return ONLY one JSON object, no prose.`;
 
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
+const json = (o: unknown, status = 200) =>
+  new Response(JSON.stringify(o), { status, headers: { ...cors, "Content-Type": "application/json" } });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  try {
-    const { game_id } = await req.json();
+  let body: any = {};
+  try { body = await req.json(); } catch { /* empty body */ }
+  const job = async () => {
+    try {
+      return await run(body);
+    } catch (err) {
+      console.error(String(err));
+      return { ok: false, error: String(err) };
+    }
+  };
+  // Long web research runs in the background so the HTTP request never hits the 150s gateway limit.
+  if (body.wait) return json(await job());
+  EdgeRuntime.waitUntil(job());
+  return json({ ok: true, queued: true }, 202);
+});
+
+async function run(body: any) {
+    const { game_id } = body;
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: g, error } = await sb.from("games").select("*").eq("game_id", game_id).single();
     if (error || !g) throw new Error("game not found: " + game_id);
@@ -89,10 +109,5 @@ Research both teams now. Return JSON:
     const { error: e2 } = await sb.from("news_intel").upsert(row);
     if (e2) throw e2;
     await sb.rpc("snapshot_slate", { d: g.game_date_et });
-    return new Response(JSON.stringify({ ok: true, ...row }), { headers: { ...cors, "Content-Type": "application/json" } });
-  } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
-    });
-  }
-});
+    return { ok: true, ...row };
+}
