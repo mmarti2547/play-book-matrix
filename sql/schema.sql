@@ -306,3 +306,16 @@ select season, scope, min(label) as label, min(sort) as sort,
 from scopes group by season, scope;
 
 grant select on sheet_results, dashboard_stats to authenticated;
+
+-- ===== My bets (logged manually or placed through Kalshi) =====
+create table if not exists my_bets (
+  id bigserial primary key, user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  game_id text references games(game_id), book text, market text, pick text, line numeric, odds int,
+  stake numeric, placed_at timestamptz default now(), status text default 'open', result text, payout numeric,
+  external_order_id text
+);
+alter table my_bets enable row level security;
+drop policy if exists "own_bets" on my_bets;
+create policy "own_bets" on my_bets for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+grant select, insert, update, delete on my_bets to authenticated;
+grant usage, select on sequence my_bets_id_seq to authenticated;
