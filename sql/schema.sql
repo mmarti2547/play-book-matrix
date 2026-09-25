@@ -77,6 +77,7 @@ create table if not exists expert_picks (
   published_at date, found_at timestamptz default now(),
   unique (expert_id, game_id, market)
 );
+alter table expert_picks add column if not exists pick_type text default 'pick';
 
 create table if not exists expert_scans (
   expert_id int references experts(id) on delete cascade, season int, week int,
@@ -109,7 +110,7 @@ with sp as (
   select game_id, count(*) filter (where pick_side='over') as n_over, count(*) filter (where pick_side='under') as n_under
   from expert_picks where market = 'total' group by game_id
 ), allp as (
-  select ep.game_id, jsonb_agg(jsonb_build_object('expert', e.name, 'market', ep.market, 'pick', ep.pick_team,
+  select ep.game_id, jsonb_agg(jsonb_build_object('expert', e.name, 'type', ep.pick_type, 'market', ep.market, 'pick', ep.pick_team,
            'side', ep.pick_side, 'line', ep.line, 'odds', ep.odds, 'units', ep.units, 'rationale', ep.rationale,
            'source_url', ep.source_url, 'source_name', ep.source_name, 'published_at', ep.published_at)
            order by e.name) as picks
@@ -193,7 +194,9 @@ select s.*,
   case when s.risk_index < 0.2 then 'Low' when s.risk_index < 0.4 then 'Moderate'
        when s.risk_index < 0.6 then 'Elevated' when s.risk_index < 0.8 then 'High' else 'Extreme' end as risk_rating,
   case when s.raw_score >= 80 then 2 when s.raw_score >= 70 then 1.5 when s.raw_score >= 60 then 1
-       when s.raw_score >= 50 then 0.5 else 0 end as units
+       when s.raw_score >= 50 then 0.5 else 0 end as units,
+  case when s.adj_home_win >= 0.5 then s.home_team else s.away_team end as predicted_winner,
+  greatest(s.adj_home_win, 1 - s.adj_home_win) as predicted_winner_prob
 from scored s left join expert_consensus ec using (game_id);
 
 -- ===== Game-day sheets (Thu / Sat / Sun / Mon ...), frozen at the slate's first kickoff =====
