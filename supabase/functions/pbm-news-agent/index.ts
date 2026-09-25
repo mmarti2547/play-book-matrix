@@ -64,8 +64,10 @@ Deno.serve(async (req) => {
     const { data: p } = await sb.from("predictions")
       .select("home_starters_out,away_starters_out").eq("game_id", game_id).maybeSingle();
 
+    const line = g.spread_line == null ? "no line posted" : g.spread_line > 0 ? `${g.home_team} (home) favored by ${g.spread_line}`
+      : g.spread_line < 0 ? `${g.away_team} (away) favored by ${-g.spread_line}` : "pick'em";
     const prompt = `Game: ${g.away_team} at ${g.home_team}, ${g.season} week ${g.week}, kickoff ${g.kickoff_utc} UTC,
-${g.stadium}. Vegas: home spread line ${g.spread_line} (expected home margin), total ${g.total_line}.
+${g.stadium}. Vegas: ${line}; moneylines ${g.away_team} ${g.away_moneyline}, ${g.home_team} ${g.home_moneyline}; total ${g.total_line}.
 Starting QBs listed: ${g.away_qb} (away), ${g.home_qb} (home).
 Starters already on the official injury report (the model has these):
 home ${JSON.stringify(p?.home_starters_out ?? [])}
