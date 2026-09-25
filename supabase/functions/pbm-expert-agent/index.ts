@@ -52,7 +52,9 @@ Deno.serve(async (req) => {
       .select("game_id,home_team,away_team,kickoff_utc,spread_line,total_line").eq("season", season).eq("week", week);
     if (!ex || !games?.length) throw new Error("expert or games not found");
 
-    const slate = games.map((g) => `${g.game_id}: ${g.away_team} at ${g.home_team} (home line ${g.spread_line}, total ${g.total_line})`).join("\n");
+    const fav = (g: any) => g.spread_line == null ? "no line" : g.spread_line > 0 ? `${g.home_team} favored by ${g.spread_line}`
+      : g.spread_line < 0 ? `${g.away_team} favored by ${-g.spread_line}` : "pick'em";
+    const slate = games.map((g) => `${g.game_id}: ${g.away_team} at ${g.home_team} (${fav(g)}, total ${g.total_line})`).join("\n");
     const prompt = `Handicapper: ${ex.name} — ${ex.affiliation}. Usually publishes: ${ex.where_published}.
 Find this handicapper's publicly posted picks for NFL ${season} week ${week}. Games this week:
 ${slate}
