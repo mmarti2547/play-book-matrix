@@ -48,10 +48,30 @@ Rules: every entry needs the source URL where it is stated. Never infer from rep
 commentary that does not name a side. Never bypass a paywall, and never fabricate. It is fine to return nothing.
 Return ONLY one JSON object.`;
 
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
+const json = (o: unknown, status = 200) =>
+  new Response(JSON.stringify(o), { status, headers: { ...cors, "Content-Type": "application/json" } });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  try {
-    const { expert_id, season, week } = await req.json();
+  let body: any = {};
+  try { body = await req.json(); } catch { /* empty body */ }
+  const job = async () => {
+    try {
+      return await run(body);
+    } catch (err) {
+      console.error(String(err));
+      return { ok: false, error: String(err) };
+    }
+  };
+  // Long web research runs in the background so the HTTP request never hits the 150s gateway limit.
+  if (body.wait) return json(await job());
+  EdgeRuntime.waitUntil(job());
+  return json({ ok: true, queued: true }, 202);
+});
+
+async function run(body: any) {
+    const { expert_id, season, week } = body;
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: ex } = await sb.from("experts").select("*").eq("id", expert_id).single();
     const { data: games } = await sb.from("games")
@@ -86,11 +106,5 @@ Return JSON:
     }
     await sb.from("expert_scans").upsert({ expert_id, season, week, scanned_at: new Date().toISOString(),
       picks_found: picks.length, notes: out.notes ?? null });
-    return new Response(JSON.stringify({ ok: true, expert: ex.name, picks: picks.length, notes: out.notes }),
-      { headers: { ...cors, "Content-Type": "application/json" } });
-  } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
-    });
-  }
-});
+    return { ok: true, expert: ex.name, picks: picks.length, notes: out.notes };
+}
