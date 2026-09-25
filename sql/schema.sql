@@ -255,8 +255,34 @@ end $$;
 grant select on game_board, track_record, expert_consensus, expert_record to authenticated;
 grant execute on function snapshot_slate(date) to authenticated;
 
--- ===== Dashboard win-rate tiles: graded from the LOCKED game-day sheets (what you actually saw before kickoff) =====
-drop view if exists record_tiles, dashboard_stats, sheet_results;
+-- ===== My bets (logged manually or placed through Kalshi) =====
+create table if not exists my_bets (
+  id bigserial primary key, user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  game_id text references games(game_id), book text, market text, pick text, line numeric, odds int,
+  stake numeric, placed_at timestamptz default now(), status text default 'open', result text, payout numeric,
+  external_order_id text
+);
+alter table my_bets enable row level security;
+drop policy if exists "own_bets" on my_bets;
+create policy "own_bets" on my_bets for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+grant select, insert, update, delete on my_bets to authenticated;
+grant usage, select on sequence my_bets_id_seq to authenticated;
+
+-- ===== Printable bet sheet (ranked by probability to win) + weekly scorecard =====
+drop view if exists weekly_scorecard, bet_sheet, dashboard_stats, sheet_results cascade;
+
+create view bet_sheet with (security_invoker = on) as
+select rank() over (partition by b.season, b.week order by b.predicted_winner_prob desc, b.bet_score desc) as rank,
+  b.season, b.week, b.slate, b.game_date_et, b.kickoff_utc, b.game_id, b.away_team, b.home_team,
+  b.predicted_winner, round(b.predicted_winner_prob, 4) as predicted_winner_prob,
+  case when b.predicted_winner = b.home_team then -b.spread_line else b.spread_line end as winner_spread,
+  case when b.predicted_winner = b.home_team then b.home_moneyline else b.away_moneyline end as winner_moneyline,
+  b.ats_pick, case when b.ats_pick = b.home_team then -b.spread_line else b.spread_line end as ats_pick_spread,
+  round(b.ats_pick_prob, 4) as ats_pick_prob, b.rating, b.bet_score, b.risk_rating, b.units,
+  b.consensus_pick, b.expert_count, b.total_line
+from game_board b
+where b.home_score is null;
+
 create view sheet_results with (security_invoker = on) as
 with p as (
   select s.game_date_et, s.slate, s.season, s.week, s.is_final, e
@@ -264,12 +290,17 @@ with p as (
 ), g as (
   select p.*, gm.home_team, gm.away_team, gm.home_score, gm.away_score,
          (gm.home_score - gm.away_score) as home_margin,
-         (e->>'spread_line')::numeric as spread_line
+         (e->>'spread_line')::numeric as spread_line,
+         coalesce(e->>'predicted_winner',
+                  case when (e->>'adj_home_win')::numeric >= 0.5 then gm.home_team else gm.away_team end) as predicted_winner,
+         coalesce((e->>'predicted_winner_prob')::numeric,
+                  greatest((e->>'adj_home_win')::numeric, 1 - (e->>'adj_home_win')::numeric)) as predicted_winner_prob
   from p join games gm on gm.game_id = p.e->>'game_id'
   where gm.home_score is not null
 )
 select g.game_date_et, g.slate, g.season, g.week, g.e->>'game_id' as game_id, g.home_team, g.away_team,
-  g.home_score, g.away_score, g.spread_line,
+  g.home_score, g.away_score, g.spread_line, g.predicted_winner, g.predicted_winner_prob,
+  rank() over (partition by g.season, g.week order by g.predicted_winner_prob desc) as week_rank,
   g.e->>'ats_pick' as ats_pick, g.e->>'rating' as rating, (g.e->>'bet_score')::int as bet_score,
   g.e->>'risk_rating' as risk_rating, coalesce((g.e->>'units')::numeric, 0) as units,
   g.e->>'consensus_pick' as consensus_pick, (g.e->>'pbm_agrees_with_experts')::boolean as agrees,
@@ -279,7 +310,7 @@ select g.game_date_et, g.slate, g.season, g.week, g.e->>'game_id' as game_id, g.
        when g.home_margin = g.spread_line then 'PUSH'
        when (g.e->>'consensus_pick' = g.home_team) = (g.home_margin > g.spread_line) then 'WIN' else 'LOSS' end as consensus_result,
   case when g.home_margin = 0 then 'PUSH'
-       when ((g.e->>'adj_home_win')::numeric >= 0.5) = (g.home_margin > 0) then 'WIN' else 'LOSS' end as su_result
+       when (g.predicted_winner = g.home_team) = (g.home_margin > 0) then 'WIN' else 'LOSS' end as su_result
 from g;
 
 create view dashboard_stats with (security_invoker = on) as
@@ -305,17 +336,33 @@ select season, scope, min(label) as label, min(sort) as sort,
   0.5238 as breakeven
 from scopes group by season, scope;
 
-grant select on sheet_results, dashboard_stats to authenticated;
+create view weekly_scorecard with (security_invoker = on) as
+with wk as (
+  select season, week, count(*) as games_scheduled, count(*) filter (where home_score is not null) as games_final
+  from games where game_type = 'REG' or game_type is not null group by season, week
+), r as (select * from sheet_results)
+select r.season, r.week, wk.games_scheduled, wk.games_final, (wk.games_final = wk.games_scheduled) as week_complete,
+  count(*) as games_graded,
+  count(*) filter (where su_result = 'WIN') as su_wins, count(*) filter (where su_result = 'LOSS') as su_losses,
+  round(count(*) filter (where su_result = 'WIN')::numeric / nullif(count(*) filter (where su_result in ('WIN','LOSS')), 0), 4) as su_win_pct,
+  count(*) filter (where week_rank <= 5 and su_result = 'WIN') as top5_su_wins,
+  count(*) filter (where week_rank <= 5 and su_result = 'LOSS') as top5_su_losses,
+  count(*) filter (where week_rank <= 10 and su_result = 'WIN') as top10_su_wins,
+  count(*) filter (where week_rank <= 10 and su_result = 'LOSS') as top10_su_losses,
+  count(*) filter (where ats_result = 'WIN') as ats_wins, count(*) filter (where ats_result = 'LOSS') as ats_losses,
+  count(*) filter (where ats_result = 'PUSH') as ats_pushes,
+  round(count(*) filter (where ats_result = 'WIN')::numeric / nullif(count(*) filter (where ats_result in ('WIN','LOSS')), 0), 4) as ats_win_pct,
+  count(*) filter (where units > 0 and ats_result = 'WIN') as bet_wins, count(*) filter (where units > 0 and ats_result = 'LOSS') as bet_losses,
+  round(sum(case when units > 0 and ats_result = 'WIN' then units * 100 / 110.0
+                 when units > 0 and ats_result = 'LOSS' then -units else 0 end), 2) as units_net,
+  count(*) filter (where rating in ('A+','A') and ats_result = 'WIN') as a_wins,
+  count(*) filter (where rating in ('A+','A') and ats_result = 'LOSS') as a_losses,
+  count(*) filter (where consensus_result = 'WIN') as consensus_wins, count(*) filter (where consensus_result = 'LOSS') as consensus_losses,
+  jsonb_agg(jsonb_build_object('rank', week_rank, 'game_id', game_id, 'matchup', away_team || ' @ ' || home_team,
+     'score', away_score || '-' || home_score, 'predicted_winner', predicted_winner, 'prob', predicted_winner_prob,
+     'su', su_result, 'ats_pick', ats_pick, 'spread_line', spread_line, 'ats', ats_result, 'rating', rating,
+     'bet_score', bet_score, 'units', units) order by week_rank) as games
+from r join wk using (season, week)
+group by r.season, r.week, wk.games_scheduled, wk.games_final;
 
--- ===== My bets (logged manually or placed through Kalshi) =====
-create table if not exists my_bets (
-  id bigserial primary key, user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  game_id text references games(game_id), book text, market text, pick text, line numeric, odds int,
-  stake numeric, placed_at timestamptz default now(), status text default 'open', result text, payout numeric,
-  external_order_id text
-);
-alter table my_bets enable row level security;
-drop policy if exists "own_bets" on my_bets;
-create policy "own_bets" on my_bets for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
-grant select, insert, update, delete on my_bets to authenticated;
-grant usage, select on sequence my_bets_id_seq to authenticated;
+grant select on bet_sheet, sheet_results, dashboard_stats, weekly_scorecard to authenticated;
