@@ -35,11 +35,17 @@ async function claude(system: string, prompt: string, maxSearches: number) {
   return JSON.parse(text.slice(a, b + 1));
 }
 
-const SYSTEM = `You track the publicly posted NFL picks of professional handicappers. You record only picks the
-handicapper actually published for free and in public (articles, free-pick pages, podcast or show segments
-with a write-up, contest entries that were publicly reported, public social posts). Never guess a pick from
-general commentary, never infer from reputation, never bypass a paywall, and never fabricate. A lean counts only if
-the source states a side. If nothing public is found for this week, return an empty picks list and explain in notes.
+const SYSTEM = `You track the publicly available NFL opinions of professional handicappers for a betting dashboard.
+Search widely: the handicapper's own site and free-picks page, their outlet's free-picks and article pages
+(WagerTalk, VegasInsider, Covers, VSiN, SportsLine, Doc's Sports, Pregame, Action Network, BASports, BigAl),
+podcast and YouTube episode titles and descriptions, show write-ups, contest-entry reports (SuperContest,
+Circa Millions), and their public X/Twitter posts from the last 7 days.
+Record two kinds of entries:
+- "pick": the handicapper explicitly released a play (side or total, usually with a line).
+- "lean": the handicapper publicly stated which side or total they like in an article, podcast, video or post,
+  without it being a formal play.
+Rules: every entry needs the source URL where it is stated. Never infer from reputation, past records or general
+commentary that does not name a side. Never bypass a paywall, and never fabricate. It is fine to return nothing.
 Return ONLY one JSON object.`;
 
 Deno.serve(async (req) => {
@@ -60,16 +66,16 @@ Find this handicapper's publicly posted picks for NFL ${season} week ${week}. Ga
 ${slate}
 
 Return JSON:
-{"picks":[{"game_id":"<one of the ids above>","market":"spread|moneyline|total","pick_team":"<team abbr, or null for totals>",
+{"picks":[{"game_id":"<one of the ids above>","pick_type":"pick|lean","market":"spread|moneyline|total","pick_team":"<team abbr, or null for totals>",
 "pick_side":"home|away|over|under","line":<the number they took, from the picked side's perspective: e.g. +3.5 or -7 for spreads, 44.5 for totals>,
 "odds":-110,"units":null,"rationale":"one sentence in your words","source_name":"","source_url":"","published_at":"YYYY-MM-DD"}],
 "notes":"what you searched and what you found or could not find"}`;
 
-    const out = await claude(SYSTEM, prompt, 8);
+    const out = await claude(SYSTEM, prompt, 12);
     const ids = new Set(games.map((g) => g.game_id));
     const picks = (out.picks ?? []).filter((p: any) => ids.has(p.game_id) && p.source_url && p.pick_side)
       .map((p: any) => ({
-        expert_id, season, week, game_id: p.game_id, market: p.market, pick_team: p.pick_team ?? null,
+        expert_id, season, week, game_id: p.game_id, pick_type: p.pick_type === "lean" ? "lean" : "pick", market: p.market, pick_team: p.pick_team ?? null,
         pick_side: p.pick_side, line: p.line ?? null, odds: p.odds ?? null, units: p.units ?? null,
         rationale: p.rationale ?? null, source_url: p.source_url, source_name: p.source_name ?? null,
         published_at: p.published_at ?? null, found_at: new Date().toISOString(),
