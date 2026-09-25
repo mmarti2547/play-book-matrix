@@ -1,0 +1,43 @@
+name: Play Book Matrix engine
+
+on:
+  schedule:
+    - cron: "15 */6 * * *"          # every 6 hours, all week
+    - cron: "5 15-23 * * 0,1,4"     # hourly Sun/Mon/Thu 11am-7pm ET (game days)
+    - cron: "5 0-3 * * 1,2,5"       # hourly 8pm-11pm ET for night games (UTC rolls to next day)
+    - cron: "5 15-23 * * 6"         # hourly Saturdays (late-season Saturday slates)
+    - cron: "30 11 * * 2"           # Tuesday: full walk-forward backtest
+  workflow_dispatch:
+    inputs:
+      backtest:
+        description: "Run the walk-forward backtest"
+        type: boolean
+        default: false
+
+concurrency:
+  group: pbm-engine
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Model + weather + injuries
+        run: |
+          if [ "${{ github.event.schedule }}" = "30 11 * * 2" ] || [ "${{ inputs.backtest }}" = "true" ]; then
+            python run.py --backtest
+          else
+            python run.py
+          fi
+      - name: Claude agents + game-day sheets
+        run: python agents.py
