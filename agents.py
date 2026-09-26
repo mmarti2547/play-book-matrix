@@ -2,7 +2,7 @@
 
 Runs after run.py in GitHub Actions:
   - news agent: every game kicking off in the next 36 hours whose intel is older than 6 hours
-  - expert agent: each active expert once per ~20 hours, Wednesday through Monday, for the current week
+  - expert agents: NOT run here any more; the database runs them once per game day, 2h before first kickoff
   - snapshot_slate for today and tomorrow (sheets freeze automatically at the slate's first kickoff)
 """
 import os
@@ -48,7 +48,9 @@ def main():
 
     # expert picks: current week = week of the next unplayed game
     nxt = games[games.kickoff_utc > now].iloc[0] if (games.kickoff_utc > now).any() else None
-    if nxt is not None and et.dayofweek in (0, 2, 3, 4, 5, 6):  # Mon, Wed-Sun
+    # Expert scans (your 10 + outlet panel) now run ONCE per game day, 2 hours before that day's first kickoff,
+    # from the database scheduler (pg_cron job pbm-gameday-scans -> run_gameday_scans_if_due). Disabled here.
+    if False and nxt is not None and et.dayofweek in (0, 2, 3, 4, 5, 6):  # Mon, Wed-Sun
         # most handicappers release free plays Thu-Sun, so rescan every 5 hours then; once a day Mon/Wed
         gap = pd.Timedelta(hours=5) if et.dayofweek in (3, 4, 5, 6) else pd.Timedelta(hours=20)
         season, week = int(nxt.season), int(nxt.week)
