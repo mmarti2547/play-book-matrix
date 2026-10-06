@@ -1,0 +1,30 @@
+name: Shadow engine (QB+, not bet)
+
+# Runs right after every successful live engine run. Writes only to shadow_* tables; never touches live picks.
+on:
+  workflow_run:
+    workflows: ["Play Book Matrix engine"]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: pbm-shadow
+  cancel-in-progress: true
+
+jobs:
+  run:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Shadow engine (QB + skill players)
+        run: python -m shadow.engine
