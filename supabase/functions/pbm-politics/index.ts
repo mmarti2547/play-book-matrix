@@ -148,6 +148,13 @@ async function sellOrder(ticker: string, side: "yes" | "no", count: number, pric
 const num = (...v: any[]) => { for (const x of v) { if (x !== undefined && x !== null && x !== "" && !isNaN(Number(x))) return Number(x); } return 0; };
 const dollars = (d: any, c: any) => (d !== undefined && d !== null ? Number(d) : c !== undefined && c !== null ? Number(c) / 100 : 0);
 
+const sellNow = (m: any, side: string, contracts: number) => {
+  if (!["active", "open"].includes(String(m.status))) return { sell_bid: null, sell_value: null };
+  const yb = dollars(m.yes_bid_dollars, m.yes_bid), ya = dollars(m.yes_ask_dollars, m.yes_ask);
+  const bid = side === "no" ? (ya > 0 ? +(1 - ya).toFixed(4) : 0) : yb;
+  return { sell_bid: bid, sell_value: bid > 0 ? +(contracts * bid - feeOf(contracts, bid)).toFixed(2) : 0 };
+};
+
 async function build() {
   const fills = await kpages(`/portfolio/fills?min_ts=${SINCE_TS}`, "fills");
   const positions = await kpages(`/portfolio/positions?count_filter=total_traded`, "market_positions");
@@ -223,6 +230,7 @@ async function build() {
         payout, net: payout === null ? null : +(payout - cost - fees).toFixed(2),
         potential_payout: contracts, potential_net: +(contracts - cost - fees).toFixed(2),
         pick_chance: +legs.reduce((p, l) => p * l.chance, 1).toFixed(3),
+        ...sellNow(m, a.side, contracts),
         candidates: [], legs, close_time: m.close_time ?? null, first_fill: a.first,
         updated_at: new Date().toISOString(),
       });
@@ -269,6 +277,7 @@ async function build() {
       payout, net: settled ? +((payout ?? 0) - cost - fees).toFixed(2) : null,
       potential_payout: contracts, potential_net: +(contracts - cost - fees).toFixed(2),
       pick_chance: +(a.side === "yes" ? yesChance : 1 - yesChance).toFixed(3),
+      ...sellNow(m, a.side, contracts),
       candidates, close_time: m.close_time ?? null, first_fill: a.first,
       updated_at: new Date().toISOString(),
     });
