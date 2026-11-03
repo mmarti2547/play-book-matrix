@@ -116,6 +116,10 @@ Deno.serve(async (req) => {
       self_trade_prevention_type: "taker_at_cross", client_order_id: crypto.randomUUID(),
     });
 
+    // Tell the security watchdog this is our own test order, so its alert says "Test order to keep Kalshi alive".
+    const oid = r.data?.order?.order_id ?? r.data?.order_id;
+    if (oid) await sb.from("watchdog_alerts").upsert({ key: `loctest:${oid}`, kind: "note", title: "PBM location test order", detail: ticker, resolved_at: now.toISOString() });
+
     if (!r.ok && isLocationErr(r.data)) {
       await sb.from("kalshi_status").upsert({ key: "location_probe", ok: false, failed_at: now.toISOString(), last_alert_at: start?.toISOString() ?? null, detail: `test order refused for location at ${etTime(now)}` });
       await sb.from("kalshi_status").update({ ok: false, failed_at: now.toISOString() }).eq("key", "location");

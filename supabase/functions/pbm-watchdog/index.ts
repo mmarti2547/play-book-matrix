@@ -110,11 +110,47 @@ Deno.serve(async (req) => {
   if (!au.ok || au.data?.ok === false) issues.push({ key: "kalshi:connection", kind: "health", title: "Can't reach your Kalshi account",
     detail: `Kalshi check failed: ${esc(String(au.data?.error ?? au.status)).slice(0, 200)}. The Auto Trader can't bet or settle until this works.` });
   else for (const o of au.data?.unknown ?? []) {
-    const k = `sec:order:${o.order_id}`;
+    let k = `sec:order:${o.order_id}`;
+    // PBM's own 1¢ location test (pbm-location-check marks it): label it, and email about those at most once a day
+    const { data: lt } = await sb.from("watchdog_alerts").select("key").eq("key", `loctest:${o.order_id}`).maybeSingle();
+    const isTest = !!lt;
+    if (isTest) k = `sec:loctest:${new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" })}`;
     if (body.baseline === true) { if (!dry) await sb.from("watchdog_alerts").upsert({ key: k, kind: "security", title: "known order (baseline)", detail: o.ticker, resolved_at: new Date().toISOString() }); continue; }
-    issues.push({ key: k, kind: "security", title: "Kalshi order the app did not place",
-      detail: `${esc(o.action ?? "")} ${esc(o.side ?? "")} · ${o.contracts || "?"} contracts · <b>${esc(o.ticker)}</b>${o.at ? ` · ${et(new Date(o.at))}` : ""} (${esc(o.status)}).
-        If you placed this yourself on Kalshi, ignore this. If not, change your Kalshi password and API key right away.` });
+    // 2026-11-03 full bet details: market name (Kalshi public market data, no keys), what was bought, price, cost
+    let what = "", event = "";
+    try {
+      const mr = await fetch(`https://api.elections.kalshi.com/trade-api/v2/markets/${encodeURIComponent(o.ticker)}`, { signal: AbortSignal.timeout(8000) });
+      const m = (await mr.json())?.market;
+      if (m) {
+        what = String(m.yes_sub_title || m.subtitle || m.title || "");
+        const er = await fetch(`https://api.elections.kalshi.com/trade-api/v2/events/${encodeURIComponent(m.event_ticker)}`, { signal: AbortSignal.timeout(8000) });
+        event = String((await er.json())?.event?.title ?? m.title ?? "");
+      }
+    } catch { /* details are a nice-to-have */ }
+    const side = String(o.side ?? "").toLowerCase();
+    const sideTxt = side === "no" ? "NO" : "YES";
+    const yesPx = o.price != null ? Number(o.price) > 1 ? Number(o.price) / 100 : Number(o.price) : null;
+    const px = yesPx == null ? null : side === "no" ? 1 - yesPx : yesPx;
+    const n = Number(o.contracts) || 0;
+    const cost = px != null && n ? n * px : null;
+    const st = String(o.status ?? "");
+    const stTxt = /cancel/i.test(st) ? "canceled - nothing bought" : /resting|open/i.test(st) ? "still waiting to fill" : /exec|fill/i.test(st) ? "FILLED" : st;
+    const row = (a: string, b: string) => `<tr><td style="color:#94a3b8;padding:2px 10px 2px 0">${a}</td><td style="color:#fff">${b}</td></tr>`;
+    if (isTest && issues.some((i) => i.key === k)) continue;
+    issues.push({ key: k, kind: "security", title: isTest ? "Test order to keep Kalshi alive" : "Kalshi order the app did not place",
+      detail: `<table style="border-collapse:collapse;margin:4px 0 8px">` +
+        (event ? row("Market", esc(event)) : "") +
+        row("Bet", `${esc(String(o.action ?? "buy")).toUpperCase()} ${sideTxt}${what ? ` on <b>${esc(what)}</b>` : ""}`) +
+        row("Contracts", n ? String(n) : "?") +
+        (px != null ? row("Price", `${Math.round(px * 100)}¢ each`) : "") +
+        (cost != null ? row("Cost", `$${cost.toFixed(2)}`) : "") +
+        (cost != null && n ? row("Profit if it wins", `$${(n - cost).toFixed(2)}`) : "") +
+        row("Status", esc(stTxt)) +
+        row("Placed", o.at ? et(new Date(o.at)) : "?") +
+        row("Ticker", `<span style="color:#94a3b8">${esc(o.ticker)}</span>`) +
+        `</table>` + (isTest
+          ? `This is Play Book Matrix's own 1¢ test order that checks your Kalshi location is still verified. It is not a bet and nothing to do. (You get this note at most once a day.)`
+          : `If you placed this yourself on Kalshi, ignore this. If not, change your Kalshi password and API key right away.`) });
   }
 
   // ---- 4b) where is that IP? (city, region, country, internet provider, VPN/proxy flag) for sign-in alerts
