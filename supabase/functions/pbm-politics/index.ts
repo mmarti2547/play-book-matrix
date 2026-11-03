@@ -1,5 +1,6 @@
 // ===== SUPABASE EDGE FUNCTION: pbm-politics =====
-// READ-ONLY Kalshi bridge for the Politics page. Never places, changes or cancels orders.
+// Kalshi bridge for the Politics page. Reads positions; the ONLY money action is 'sell'
+// (owner only, confirm:true + authenticator, reduce-only fill-or-kill at a price the owner approved). It never buys.
 // Pulls Michael's election/politics positions from Kalshi, grades them (won/lost/open),
 // and saves a snapshot to public.politics_picks. Called by cron (x-pbm-cron) or the owner.
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -86,6 +87,64 @@ async function kpages(path: string, key: string, max = 10) {
   return out;
 }
 
+async function kpost(path: string, body: unknown) {
+  const sign = await getSigner();
+  const ts = Date.now().toString();
+  const full = PREFIX + path;
+  const sig = await sign(new TextEncoder().encode(ts + "POST" + full.split("?")[0]));
+  const r = await fetch(BASE + full, {
+    method: "POST",
+    headers: {
+      "KALSHI-ACCESS-KEY": Deno.env.get("KALSHI_API_KEY_ID")!,
+      "KALSHI-ACCESS-TIMESTAMP": ts,
+      "KALSHI-ACCESS-SIGNATURE": btoa(String.fromCharCode(...new Uint8Array(sig))),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const t = await r.text();
+  let d: any = null;
+  try { d = JSON.parse(t); } catch { d = { raw: t.slice(0, 300) }; }
+  return { ok: r.ok, status: r.status, data: d };
+}
+const feeOf = (c: number, p: number) => (p > 0 && p < 1 ? Math.ceil(0.07 * c * p * (1 - p) * 100) / 100 : 0);
+
+// What selling ALL of this position would pay right now (no money moves).
+async function sellQuote(ticker: string, side: "yes" | "no") {
+  const pos = (await kget(`/portfolio/positions?ticker=${encodeURIComponent(ticker)}&count_filter=position`)).market_positions ?? [];
+  const p = pos.find((x: any) => x.ticker === ticker);
+  const held = p ? Number(p.position_fp ?? p.position ?? 0) : 0; // + = YES contracts, - = NO contracts
+  const contracts = side === "yes" ? Math.max(0, held) : Math.max(0, -held);
+  if (!(contracts > 0)) return { ok: false, error: "You don't hold this position anymore" };
+  const m = (await kget(`/markets/${encodeURIComponent(ticker)}`)).market;
+  if (!["active", "open"].includes(String(m.status))) return { ok: false, error: "Kalshi isn't trading this market right now" };
+  const yb = dollars(m.yes_bid_dollars, m.yes_bid), ya = dollars(m.yes_ask_dollars, m.yes_ask);
+  const bid = side === "yes" ? yb : +(1 - ya).toFixed(4);
+  const c = +contracts.toFixed(2);
+  const fee = feeOf(c, bid);
+  return { ok: true, ticker, side, contracts: c, bid, fee_usd: fee, value_usd: bid > 0 ? +(c * bid - fee).toFixed(2) : 0 };
+}
+
+// Sell (reduce-only, fill-or-kill) at the quoted bid. Same order format as pbm-kalshi.
+async function sellOrder(ticker: string, side: "yes" | "no", count: number, price: number) {
+  const yesPrice = side === "yes" ? price : 1 - price;
+  const mk = (cnt: number) => ({
+    ticker, side: side === "yes" ? "ask" : "bid", count: cnt.toFixed(2),
+    price: (Math.round(yesPrice * 100) / 100).toFixed(2), time_in_force: "fill_or_kill",
+    self_trade_prevention_type: "taker_at_cross", client_order_id: crypto.randomUUID(), reduce_only: true,
+  });
+  let r = await kpost("/portfolio/events/orders", mk(count));
+  if (!r.ok && Math.floor(count) !== count && Math.floor(count) >= 1) r = await kpost("/portfolio/events/orders", mk(Math.floor(count)));
+  if (!r.ok) return { ok: false, error: `Kalshi rejected the sale (${r.status}): ${JSON.stringify(r.data).slice(0, 200)}` };
+  const d = r.data.order ?? r.data;
+  let fill = Number(d.fill_count_fp ?? d.fill_count ?? 0);
+  if (!(fill > 0) && d.order_id) {
+    const g = await kget(`/portfolio/orders/${d.order_id}`).catch(() => null);
+    if (g?.order) fill = Number(g.order.fill_count_fp ?? g.order.fill_count ?? 0);
+  }
+  return { ok: true, fill, order_id: d.order_id };
+}
+
 const num = (...v: any[]) => { for (const x of v) { if (x !== undefined && x !== null && x !== "" && !isNaN(Number(x))) return Number(x); } return 0; };
 const dollars = (d: any, c: any) => (d !== undefined && d !== null ? Number(d) : c !== undefined && c !== null ? Number(c) / 100 : 0);
 
@@ -100,7 +159,7 @@ async function build() {
   const agg: Record<string, Agg> = {};
   for (const f of fills) {
     const ticker = f.ticker ?? f.market_ticker;
-    if (!ticker || SPORTS_PREFIX.test(ticker)) continue;
+    if (!ticker || (SPORTS_PREFIX.test(ticker) && !/^KXMVE/.test(ticker))) continue;
     const side = String(f.side ?? "yes").toLowerCase();
     const cnt = num(f.count_fp, f.count);
     const px = side === "yes" ? dollars(f.yes_price_dollars, f.yes_price) : dollars(f.no_price_dollars, f.no_price);
@@ -115,8 +174,60 @@ async function build() {
 
   const eventCache: Record<string, any> = {};
   const rows: any[] = [];
+  const priceOf = (mk: any) => {
+    const last = dollars(mk.last_price_dollars, mk.last_price);
+    const bid = dollars(mk.yes_bid_dollars, mk.yes_bid);
+    const ask = dollars(mk.yes_ask_dollars, mk.yes_ask);
+    return bid && ask ? (bid + ask) / 2 : last;
+  };
   for (const a of Object.values(agg)) {
     const m = (await kget(`/markets/${a.ticker}`)).market;
+    if (/^KXMVE/.test(a.ticker)) {
+      // Combo (parlay): include only when every leg is a non-sports (politics) market.
+      const legsRaw: any[] = m.mve_selected_legs ?? m.selected_legs ?? m.legs ?? [];
+      if (!legsRaw.length) continue;
+      const legTk = (l: any) => l.market_ticker ?? l.ticker;
+      if (legsRaw.some((l: any) => SPORTS_PREFIX.test(String(legTk(l))) || /^KX(NFL|NCAA|NBA|NHL|MLB)/.test(String(l.event_ticker ?? "")))) continue;
+      const legs: any[] = [];
+      for (const l of legsRaw) {
+        const lm = (await kget(`/markets/${legTk(l)}`)).market;
+        const ev = (await kget(`/events/${lm.event_ticker}`)).event ?? {};
+        const side = String(l.side ?? "yes").toLowerCase();
+        const yc = priceOf(lm);
+        const res = String(lm.result ?? "").toLowerCase();
+        const name = lm.yes_sub_title || lm.subtitle || lm.title;
+        legs.push({
+          market_ticker: legTk(l), event_title: ev.title ?? lm.title,
+          name: side === "yes" ? name : `Not ${name}`, side,
+          chance: +(side === "yes" ? yc : 1 - yc).toFixed(3),
+          outcome: res === "yes" || res === "no" ? (res === side ? "won" : "lost") : "open",
+        });
+      }
+      const result = String(m.result ?? "").toLowerCase();
+      const settled = (result === "yes" || result === "no") && ["settled", "finalized", "determined"].includes(String(m.status));
+      const pos = posBy[a.ticker];
+      const fees = pos ? dollars(pos.fees_paid_dollars, pos.fees_paid) : a.fees;
+      const contracts = +a.contracts.toFixed(2);
+      const cost = +a.cost.toFixed(2);
+      const anyLost = legs.some((l) => l.outcome === "lost");
+      const allWon = legs.every((l) => l.outcome === "won");
+      const outcome = settled ? (result === a.side ? "won" : "lost") : anyLost ? "lost" : allWon ? "won" : "open";
+      const payout = outcome === "won" ? contracts : outcome === "lost" ? 0 : null;
+      rows.push({
+        ticker: a.ticker, side: a.side, user_id: OWNER_ID, is_combo: true,
+        event_ticker: m.event_ticker, event_title: `Combo · ${legs.length} legs`, market_title: m.title,
+        pick_name: legs.map((l) => l.name).join(" + "),
+        contracts, cost, fees: +fees.toFixed(2), avg_price: contracts ? +(cost / contracts).toFixed(4) : null,
+        market_status: m.status, result: result || null, outcome,
+        settled_on_kalshi: settled,
+        payout, net: payout === null ? null : +(payout - cost - fees).toFixed(2),
+        potential_payout: contracts, potential_net: +(contracts - cost - fees).toFixed(2),
+        pick_chance: +legs.reduce((p, l) => p * l.chance, 1).toFixed(3),
+        candidates: [], legs, close_time: m.close_time ?? null, first_fill: a.first,
+        updated_at: new Date().toISOString(),
+      });
+      continue;
+    }
     const evt = m.event_ticker;
     eventCache[evt] ??= await kget(`/events/${evt}?with_nested_markets=true`);
     const ev = eventCache[evt].event ?? {};
@@ -184,6 +295,46 @@ Deno.serve(async (req) => {
     if (!authed) return json({ ok: false, error: "not allowed" }, 401);
 
     const body = await req.json().catch(() => ({}));
+
+    // ---------- SELL (owner only, never from cron). quote = no money; sell = needs confirm:true + authenticator ----------
+    if (body.action === "sell_quote" || body.action === "sell") {
+      if (cronHdr) return json({ ok: false, error: "not allowed" }, 401);
+      const ticker = String(body.ticker ?? "");
+      const side = body.side === "no" ? "no" : "yes";
+      if (!ticker) return json({ ok: false, error: "ticker required" }, 400);
+      if (body.action === "sell") {
+        if (body.confirm !== true) return json({ ok: false, error: "Nothing sold: confirm:true is required" }, 400);
+        const { data: f } = await sb.auth.admin.mfa.listFactors({ userId: OWNER_ID });
+        const hasVerified = (f?.factors ?? []).some((x: any) => x.status === "verified");
+        let aal = "aal1";
+        try {
+          let p = (req.headers.get("Authorization") ?? "").replace(/^Bearer /, "").split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+          while (p.length % 4) p += "=";
+          aal = JSON.parse(atob(p)).aal ?? "aal1";
+        } catch { /* keep aal1 */ }
+        if (hasVerified && aal !== "aal2") return json({ ok: false, error: "Enter your authenticator code to sell", mfa_required: true }, 403);
+      }
+      const q = await sellQuote(ticker, side);
+      if (!q.ok || body.action === "sell_quote") return json(q);
+      const minPrice = Number(body.min_price);
+      if (!(q.bid > 0)) return json({ ok: false, error: "No buyer on Kalshi right now - nothing sold" });
+      if (!(minPrice > 0) || q.bid + 1e-9 < minPrice)
+        return json({ ok: false, error: `Price moved to ${Math.round(q.bid * 100)}¢ (you approved ${Math.round(minPrice * 100)}¢) - nothing sold`, quote: q });
+      const r = await sellOrder(ticker, side, q.contracts, q.bid);
+      if (!r.ok) return json({ ok: false, error: r.error });
+      if (!(r.fill > 0)) return json({ ok: false, error: "Kalshi couldn't sell at that price - nothing sold" });
+      const proceeds = +(r.fill * q.bid - feeOf(r.fill, q.bid)).toFixed(2);
+      return json({ ok: true, sold: r.fill, price: q.bid, proceeds_usd: proceeds, order_id: r.order_id });
+    }
+
+    if (body.action === "combos_raw") {
+      const since = Math.floor(Date.parse(body.since ?? "2026-11-03T10:00:00Z") / 1000);
+      const f = await kpages(`/portfolio/fills?min_ts=${since}`, "fills");
+      const tickers = [...new Set(f.map((x: any) => x.ticker ?? x.market_ticker).filter((t: string) => /^KXMVE/.test(t)))];
+      const markets = [];
+      for (const t of tickers.slice(0, 5)) markets.push((await kget(`/markets/${t}`)).market);
+      return json({ ok: true, fills: f.filter((x: any) => /^KXMVE/.test(x.ticker ?? x.market_ticker)), markets });
+    }
     if (body.action === "raw") {
       const f = await kget(`/portfolio/fills?min_ts=${SINCE_TS}&limit=5`);
       const p = await kget(`/portfolio/positions?count_filter=total_traded&limit=5`);
