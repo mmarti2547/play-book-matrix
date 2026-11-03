@@ -1,0 +1,2134 @@
+table	column	type	nullable	default
+agent_cost_daily	day	date	YES	
+agent_cost_daily	agent	text	YES	
+agent_cost_daily	calls	bigint	YES	
+agent_cost_daily	input_tokens	bigint	YES	
+agent_cost_daily	output_tokens	bigint	YES	
+agent_cost_daily	web_searches	bigint	YES	
+agent_cost_daily	cost_usd	numeric	YES	
+agent_cost_weekly	season	integer	YES	
+agent_cost_weekly	week	integer	YES	
+agent_cost_weekly	agent	text	YES	
+agent_cost_weekly	calls	bigint	YES	
+agent_cost_weekly	web_searches	bigint	YES	
+agent_cost_weekly	cost_usd	numeric	YES	
+agent_lessons	id	bigint	NO	nextval('agent_lessons_id_seq'::regclass)
+agent_lessons	lesson	text	NO	
+agent_lessons	category	text	YES	
+agent_lessons	applies_to	text	YES	'news'::text
+agent_lessons	evidence	text	YES	
+agent_lessons	status	text	NO	'candidate'::text
+agent_lessons	confirmations	integer	NO	1
+agent_lessons	contradictions	integer	NO	0
+agent_lessons	weeks	_text	NO	'{}'::text[]
+agent_lessons	first_seen	timestamp with time zone	YES	now()
+agent_lessons	last_seen	timestamp with time zone	YES	now()
+agent_lessons	promoted_at	timestamp with time zone	YES	
+agent_lessons	retired_at	timestamp with time zone	YES	
+agent_progress	kickoff_utc	timestamp with time zone	YES	
+agent_progress	inactives_at	timestamp with time zone	YES	
+agent_progress	games	bigint	YES	
+agent_progress	model_done	bigint	YES	
+agent_progress	news_done	bigint	YES	
+agent_progress	last_news_at	timestamp with time zone	YES	
+agent_progress	last_model_at	timestamp with time zone	YES	
+agent_progress	last_trigger	timestamp with time zone	YES	
+agent_progress	status	text	YES	
+agent_runs	run_date	date	NO	
+agent_runs	first_kickoff	timestamp with time zone	YES	
+agent_runs	ran_at	timestamp with time zone	YES	now()
+agent_runs	outlets	integer	YES	
+agent_runs	core_experts	integer	YES	
+agent_usage	id	bigint	NO	nextval('agent_usage_id_seq'::regclass)
+agent_usage	created_at	timestamp with time zone	NO	now()
+agent_usage	agent	text	NO	
+agent_usage	ref	text	YES	
+agent_usage	model	text	YES	
+agent_usage	input_tokens	integer	YES	
+agent_usage	output_tokens	integer	YES	
+agent_usage	web_searches	integer	YES	
+agent_usage	cost_usd	numeric	YES	
+alert_settings	user_id	uuid	NO	
+alert_settings	email	text	NO	
+alert_settings	enabled	boolean	NO	true
+alert_settings	early_edge	boolean	NO	true
+alert_settings	line_moves	boolean	NO	true
+alert_settings	weekly_briefing	boolean	NO	true
+alert_settings	created_at	timestamp with time zone	YES	now()
+alert_settings	updated_at	timestamp with time zone	YES	now()
+alert_settings	auto_bets	boolean	NO	true
+alt_best_bets	ticker	text	YES	
+alt_best_bets	event_ticker	text	YES	
+alt_best_bets	game_id	text	YES	
+alt_best_bets	season	integer	YES	
+alt_best_bets	week	integer	YES	
+alt_best_bets	slate	text	YES	
+alt_best_bets	game_date_et	date	YES	
+alt_best_bets	kickoff_utc	timestamp with time zone	YES	
+alt_best_bets	away_team	text	YES	
+alt_best_bets	home_team	text	YES	
+alt_best_bets	team	text	YES	
+alt_best_bets	threshold	numeric	YES	
+alt_best_bets	bet_label	text	YES	
+alt_best_bets	yes_bid	numeric	YES	
+alt_best_bets	yes_ask	numeric	YES	
+alt_best_bets	kalshi_prob	numeric	YES	
+alt_best_bets	volume	numeric	YES	
+alt_best_bets	open_interest	numeric	YES	
+alt_best_bets	fetched_at	timestamp with time zone	YES	
+alt_best_bets	model_prob	numeric	YES	
+alt_best_bets	our_prob	numeric	YES	
+alt_best_bets	fee	numeric	YES	
+alt_best_bets	edge	numeric	YES	
+alt_best_bets	edge_pts	numeric	YES	
+alt_best_bets	roi	numeric	YES	
+alt_best_bets	payout_multiple	numeric	YES	
+alt_best_bets	risk_rating	text	YES	
+alt_best_bets	risk_index	numeric	YES	
+alt_best_bets	spread_line	numeric	YES	
+alt_best_bets	ats_pick	text	YES	
+alt_best_bets	game_rating	text	YES	
+alt_best_bets	alt_score	integer	YES	
+alt_best_bets	grade	text	YES	
+alt_best_bets	alt_rank	bigint	YES	
+alt_best_bets	game_leg_rank	bigint	YES	
+alt_best_bets	event_title	text	YES	
+alt_best_bets	market_title	text	YES	
+alt_best_bets	kalshi_url	text	YES	
+alt_best_bets	prob_rank	bigint	YES	
+alt_best_bets	best_rank	bigint	YES	
+alt_lines_board	ticker	text	YES	
+alt_lines_board	event_ticker	text	YES	
+alt_lines_board	game_id	text	YES	
+alt_lines_board	season	integer	YES	
+alt_lines_board	week	integer	YES	
+alt_lines_board	slate	text	YES	
+alt_lines_board	game_date_et	date	YES	
+alt_lines_board	kickoff_utc	timestamp with time zone	YES	
+alt_lines_board	away_team	text	YES	
+alt_lines_board	home_team	text	YES	
+alt_lines_board	team	text	YES	
+alt_lines_board	threshold	numeric	YES	
+alt_lines_board	bet_label	text	YES	
+alt_lines_board	yes_bid	numeric	YES	
+alt_lines_board	yes_ask	numeric	YES	
+alt_lines_board	kalshi_prob	numeric	YES	
+alt_lines_board	volume	numeric	YES	
+alt_lines_board	open_interest	numeric	YES	
+alt_lines_board	fetched_at	timestamp with time zone	YES	
+alt_lines_board	model_prob	numeric	YES	
+alt_lines_board	our_prob	numeric	YES	
+alt_lines_board	fee	numeric	YES	
+alt_lines_board	edge	numeric	YES	
+alt_lines_board	edge_pts	numeric	YES	
+alt_lines_board	roi	numeric	YES	
+alt_lines_board	payout_multiple	numeric	YES	
+alt_lines_board	risk_rating	text	YES	
+alt_lines_board	risk_index	numeric	YES	
+alt_lines_board	spread_line	numeric	YES	
+alt_lines_board	ats_pick	text	YES	
+alt_lines_board	game_rating	text	YES	
+alt_lines_board	alt_score	integer	YES	
+alt_lines_board	grade	text	YES	
+alt_lines_board	alt_rank	bigint	YES	
+alt_lines_board	game_leg_rank	bigint	YES	
+alt_lines_board	event_title	text	YES	
+alt_lines_board	market_title	text	YES	
+alt_lines_board	kalshi_url	text	YES	
+alt_lines_board	prob_rank	bigint	YES	
+alt_parlay_bundle	bundle_slot	integer	YES	
+alt_parlay_bundle	shared_games	integer	YES	
+alt_parlay_bundle	season	integer	YES	
+alt_parlay_bundle	week	integer	YES	
+alt_parlay_bundle	legs	integer	YES	
+alt_parlay_bundle	tickers	_text	YES	
+alt_parlay_bundle	leg_detail	jsonb	YES	
+alt_parlay_bundle	first_kickoff	timestamp with time zone	YES	
+alt_parlay_bundle	our_prob	numeric	YES	
+alt_parlay_bundle	kalshi_prob	numeric	YES	
+alt_parlay_bundle	fair_cost_if_legs_bought_separately	numeric	YES	
+alt_parlay_bundle	max_price_to_pay	numeric	YES	
+alt_parlay_bundle	edge_vs_kalshi	numeric	YES	
+alt_parlay_bundle	parlay_score	integer	YES	
+alt_parlay_bundle	variance	text	YES	
+alt_parlay_bundle	parlay_rank	bigint	YES	
+alt_parlay_bundle	prob_rank	bigint	YES	
+alt_parlay_bundle	parlay_grade	text	YES	
+alt_parlay_swaps	bundle_slot	integer	YES	
+alt_parlay_swaps	season	integer	YES	
+alt_parlay_swaps	week	integer	YES	
+alt_parlay_swaps	leg_no	integer	YES	
+alt_parlay_swaps	replace_ticker	text	YES	
+alt_parlay_swaps	replace_label	text	YES	
+alt_parlay_swaps	replace_prob	numeric	YES	
+alt_parlay_swaps	ticker	text	YES	
+alt_parlay_swaps	bet_label	text	YES	
+alt_parlay_swaps	game_id	text	YES	
+alt_parlay_swaps	away_team	text	YES	
+alt_parlay_swaps	home_team	text	YES	
+alt_parlay_swaps	kickoff_utc	timestamp with time zone	YES	
+alt_parlay_swaps	leg_grade	text	YES	
+alt_parlay_swaps	alt_score	integer	YES	
+alt_parlay_swaps	leg_prob	numeric	YES	
+alt_parlay_swaps	yes_ask	numeric	YES	
+alt_parlay_swaps	kalshi_url	text	YES	
+alt_parlay_swaps	swap_type	text	YES	
+alt_parlay_swaps	used_in_other_parlays	bigint	YES	
+alt_parlay_swaps	old_parlay_prob	numeric	YES	
+alt_parlay_swaps	new_parlay_prob	numeric	YES	
+alt_parlay_swaps	prob_change	numeric	YES	
+alt_parlay_swaps	new_kalshi_prob	numeric	YES	
+alt_parlay_swaps	new_max_price_to_pay	numeric	YES	
+alt_parlay_swaps	new_parlay_score	integer	YES	
+alt_parlay_swaps	new_parlay_grade	text	YES	
+alt_parlay_swaps	swap_rank	bigint	YES	
+alt_parlays	season	integer	YES	
+alt_parlays	week	integer	YES	
+alt_parlays	legs	integer	YES	
+alt_parlays	tickers	_text	YES	
+alt_parlays	leg_detail	jsonb	YES	
+alt_parlays	first_kickoff	timestamp with time zone	YES	
+alt_parlays	our_prob	numeric	YES	
+alt_parlays	kalshi_prob	numeric	YES	
+alt_parlays	fair_cost_if_legs_bought_separately	numeric	YES	
+alt_parlays	max_price_to_pay	numeric	YES	
+alt_parlays	edge_vs_kalshi	numeric	YES	
+alt_parlays	parlay_score	integer	YES	
+alt_parlays	variance	text	YES	
+alt_parlays	parlay_rank	bigint	YES	
+alt_parlays	prob_rank	bigint	YES	
+alt_parlays	parlay_grade	text	YES	
+alt_picks_log	ticker	text	NO	
+alt_picks_log	game_id	text	YES	
+alt_picks_log	season	integer	YES	
+alt_picks_log	week	integer	YES	
+alt_picks_log	team	text	YES	
+alt_picks_log	threshold	numeric	YES	
+alt_picks_log	bet_label	text	YES	
+alt_picks_log	yes_ask	numeric	YES	
+alt_picks_log	our_prob	numeric	YES	
+alt_picks_log	edge_pts	numeric	YES	
+alt_picks_log	grade	text	YES	
+alt_picks_log	alt_score	integer	YES	
+alt_picks_log	logged_at	timestamp with time zone	YES	now()
+alt_picks_log	first_yes_ask	numeric	YES	
+alt_picks_log	first_logged_at	timestamp with time zone	YES	
+alt_picks_log	model_prob	numeric	YES	
+alt_picks_log	kalshi_prob	numeric	YES	
+alt_picks_log	team_margin	numeric	YES	
+alt_record	ticker	text	YES	
+alt_record	game_id	text	YES	
+alt_record	season	integer	YES	
+alt_record	week	integer	YES	
+alt_record	team	text	YES	
+alt_record	threshold	numeric	YES	
+alt_record	bet_label	text	YES	
+alt_record	yes_ask	numeric	YES	
+alt_record	our_prob	numeric	YES	
+alt_record	edge_pts	numeric	YES	
+alt_record	grade	text	YES	
+alt_record	alt_score	integer	YES	
+alt_record	logged_at	timestamp with time zone	YES	
+alt_record	home_team	text	YES	
+alt_record	away_team	text	YES	
+alt_record	home_score	integer	YES	
+alt_record	away_score	integer	YES	
+alt_record	result	text	YES	
+alt_record	profit_per_contract	numeric	YES	
+app_members	email	text	NO	
+app_members	user_id	uuid	YES	
+app_members	role	text	NO	
+app_members	display_name	text	YES	
+app_members	bankroll_start	numeric	YES	
+app_members	line_source	text	NO	'kalshi'::text
+app_members	created_at	timestamp with time zone	YES	now()
+auto_trader_log	id	bigint	NO	nextval('auto_trader_log_id_seq'::regclass)
+auto_trader_log	run_at	timestamp with time zone	YES	now()
+auto_trader_log	user_id	uuid	YES	
+auto_trader_log	game_id	text	YES	
+auto_trader_log	kind	text	YES	
+auto_trader_log	pick	text	YES	
+auto_trader_log	grade	text	YES	
+auto_trader_log	win_prob	numeric	YES	
+auto_trader_log	price	numeric	YES	
+auto_trader_log	stake	numeric	YES	
+auto_trader_log	status	text	YES	
+auto_trader_log	bet_id	bigint	YES	
+auto_trader_log	reason	text	YES	
+auto_trader_log	bet_key	text	YES	
+auto_trader_settings	user_id	uuid	NO	
+auto_trader_settings	enabled	boolean	NO	false
+auto_trader_settings	enabled_at	timestamp with time zone	YES	
+auto_trader_settings	disabled_at	timestamp with time zone	YES	
+auto_trader_settings	disabled_reason	text	YES	
+auto_trader_settings	tiers	_numeric	NO	'{10,25,50,100}'::numeric[]
+auto_trader_settings	weekly_cap_usd	numeric	NO	400
+auto_trader_settings	loss_stop_usd	numeric	NO	200
+auto_trader_settings	include_props	boolean	NO	true
+auto_trader_settings	include_parlays	boolean	NO	true
+auto_trader_settings	max_parlays_week	integer	NO	2
+auto_trader_settings	early_edge	boolean	NO	false
+auto_trader_settings	updated_at	timestamp with time zone	YES	now()
+auto_trader_settings	parlay_profile	integer	NO	3
+auto_trader_settings	parlay_legs	integer	NO	0
+auto_trader_settings	bet_profile	integer	NO	1
+auto_trader_settings	extras_cap_usd	numeric	NO	180
+auto_trader_settings	parlay_max_stake	numeric	NO	25
+auto_trader_settings	parlay_min_grade	text	NO	'A+'::text
+auto_trader_settings	ee_max_week	integer	NO	3
+auto_trader_settings	roll_enabled	boolean	NO	false
+auto_trader_settings	roll_start_stake	numeric	NO	25
+auto_trader_settings	roll_legs	integer	NO	4
+auto_trader_settings	limit_orders	boolean	NO	false
+auto_trader_settings	limit_improve_cents	integer	NO	2
+auto_trader_settings	limit_fallback_min	integer	NO	25
+auto_trader_settings	kelly_sizing	boolean	NO	false
+auto_trader_settings	kelly_fraction	numeric	NO	0.25
+auto_trader_settings	teasers	boolean	NO	false
+auto_trader_settings	teaser_stake	numeric	NO	25
+auto_trader_settings	max_teasers_week	integer	NO	1
+auto_trader_settings	clv_timing	boolean	NO	false
+auto_trader_settings	middles	boolean	NO	false
+auto_trader_settings	middle_max_cost	numeric	NO	0.04
+auto_trader_settings	middle_max_usd	numeric	NO	50
+auto_trader_settings	roll_cashout	boolean	NO	false
+auto_trader_settings	roll_cashout_at	numeric	NO	0.85
+auto_trader_settings	include_bplus	boolean	NO	false
+auto_trader_settings	include_b	boolean	NO	false
+auto_trader_settings	include_c	boolean	NO	false
+auto_trader_settings	max_bplus	numeric	NO	25
+auto_trader_settings	max_b	numeric	NO	10
+auto_trader_settings	max_c	numeric	NO	5
+auto_trader_settings	jamie_auto	boolean	YES	false
+auto_trader_settings	jamie_stake	numeric	YES	10
+auto_trader_settings	jamie_legs	integer	YES	4
+auto_trader_settings	jamie_after_min	integer	YES	35
+auto_trader_settings	jamie_max_day	integer	YES	2
+auto_trader_settings	jamie_min_grade	text	YES	'A'::text
+auto_trader_settings	stake_aplus	numeric	YES	
+auto_trader_settings	stake_a	numeric	YES	
+auto_trader_settings	auto_cashout	boolean	NO	false
+auto_trader_settings	auto_zplus	boolean	NO	false
+bet_briefings	id	bigint	NO	nextval('bet_briefings_id_seq'::regclass)
+bet_briefings	user_id	uuid	NO	
+bet_briefings	season	integer	NO	
+bet_briefings	week	integer	NO	
+bet_briefings	status	text	NO	'generating'::text
+bet_briefings	stats	jsonb	YES	
+bet_briefings	report	jsonb	YES	
+bet_briefings	error	text	YES	
+bet_briefings	created_at	timestamp with time zone	NO	now()
+bet_briefings	updated_at	timestamp with time zone	NO	now()
+bet_cart	id	bigint	NO	nextval('bet_cart_id_seq'::regclass)
+bet_cart	user_id	uuid	NO	auth.uid()
+bet_cart	game_id	text	YES	
+bet_cart	source	text	YES	
+bet_cart	ticker	text	YES	
+bet_cart	side	text	YES	'yes'::text
+bet_cart	label	text	YES	
+bet_cart	where_in_kalshi	text	YES	
+bet_cart	kalshi_url	text	YES	
+bet_cart	limit_price	numeric	YES	
+bet_cart	count	integer	YES	10
+bet_cart	added_at	timestamp with time zone	YES	now()
+bet_cart	auto_added	boolean	NO	false
+bet_cart	grade	text	YES	
+bet_cart	window_opens_at	timestamp with time zone	YES	
+bet_cart	window_closes_at	timestamp with time zone	YES	
+bet_cart_detail	id	bigint	YES	
+bet_cart_detail	user_id	uuid	YES	
+bet_cart_detail	game_id	text	YES	
+bet_cart_detail	source	text	YES	
+bet_cart_detail	ticker	text	YES	
+bet_cart_detail	side	text	YES	
+bet_cart_detail	label	text	YES	
+bet_cart_detail	where_in_kalshi	text	YES	
+bet_cart_detail	kalshi_url	text	YES	
+bet_cart_detail	limit_price	numeric	YES	
+bet_cart_detail	count	integer	YES	
+bet_cart_detail	added_at	timestamp with time zone	YES	
+bet_cart_detail	grade	text	YES	
+bet_cart_detail	score	integer	YES	
+bet_cart_detail	risk_rating	text	YES	
+bet_cart_detail	risk_score	integer	YES	
+bet_cart_detail	hit_pct	numeric	YES	
+bet_cart_detail	edge_pts	numeric	YES	
+bet_cart_detail	suggested_units	numeric	YES	
+bet_cart_detail	away_team	text	YES	
+bet_cart_detail	home_team	text	YES	
+bet_cart_detail	kickoff_utc	timestamp with time zone	YES	
+bet_cart_dismissed	user_id	uuid	NO	
+bet_cart_dismissed	ticker	text	NO	
+bet_cart_dismissed	side	text	NO	
+bet_cart_dismissed	dismissed_at	timestamp with time zone	NO	now()
+bet_sheet	rank	bigint	YES	
+bet_sheet	bet_rank	bigint	YES	
+bet_sheet	season	integer	YES	
+bet_sheet	week	integer	YES	
+bet_sheet	slate	text	YES	
+bet_sheet	game_date_et	date	YES	
+bet_sheet	kickoff_utc	timestamp with time zone	YES	
+bet_sheet	game_id	text	YES	
+bet_sheet	away_team	text	YES	
+bet_sheet	home_team	text	YES	
+bet_sheet	predicted_winner	text	YES	
+bet_sheet	predicted_winner_prob	numeric	YES	
+bet_sheet	winner_spread	numeric	YES	
+bet_sheet	winner_moneyline	integer	YES	
+bet_sheet	ats_pick	text	YES	
+bet_sheet	ats_pick_spread	numeric	YES	
+bet_sheet	ats_pick_prob	numeric	YES	
+bet_sheet	rating	text	YES	
+bet_sheet	bet_score	integer	YES	
+bet_sheet	risk_rating	text	YES	
+bet_sheet	risk_index	numeric	YES	
+bet_sheet	units	numeric	YES	
+bet_sheet	consensus_pick	text	YES	
+bet_sheet	expert_count	bigint	YES	
+bet_sheet	total_line	numeric	YES	
+bet_sheet	kalshi_winner	text	YES	
+bet_sheet	kalshi_winner_prob	numeric	YES	
+bet_sheet	kalshi_home_prob	numeric	YES	
+bet_sheet	kalshi_edge_pts	numeric	YES	
+bet_sheet	pbm_agrees_with_kalshi	boolean	YES	
+bet_sheet	kalshi_value_side	text	YES	
+bet_sheet	kalshi_value_pts	numeric	YES	
+bet_sheet	kalshi_updated_at	timestamp with time zone	YES	
+bet_sheet	vegas_winner	text	YES	
+bet_sheet	vegas_winner_prob	numeric	YES	
+bet_sheet	vegas_home_prob	numeric	YES	
+bet_sheet	vegas_favorite	text	YES	
+bet_sheet	vegas_fav_points	numeric	YES	
+bet_sheet	home_moneyline	integer	YES	
+bet_sheet	away_moneyline	integer	YES	
+bet_sheet	vegas_edge_pts	numeric	YES	
+bet_sheet	pbm_agrees_with_vegas	boolean	YES	
+closing_lines	ticker	text	NO	
+closing_lines	game_id	text	YES	
+closing_lines	kind	text	YES	
+closing_lines	team	text	YES	
+closing_lines	threshold	numeric	YES	
+closing_lines	yes_bid	numeric	YES	
+closing_lines	yes_ask	numeric	YES	
+closing_lines	mid	numeric	YES	
+closing_lines	kickoff_utc	timestamp with time zone	YES	
+closing_lines	captured_at	timestamp with time zone	YES	now()
+clv_summary	source	text	YES	
+clv_summary	bucket	text	YES	
+clv_summary	n	bigint	YES	
+clv_summary	avg_clv_pts	numeric	YES	
+clv_summary	pct_beat_close	numeric	YES	
+dashboard_stats	season	integer	YES	
+dashboard_stats	scope	text	YES	
+dashboard_stats	label	text	YES	
+dashboard_stats	sort	integer	YES	
+dashboard_stats	wins	bigint	YES	
+dashboard_stats	losses	bigint	YES	
+dashboard_stats	pushes	bigint	YES	
+dashboard_stats	win_pct	numeric	YES	
+dashboard_stats	units_net	numeric	YES	
+dashboard_stats	breakeven	numeric	YES	
+data_freshness	game_id	text	YES	
+data_freshness	kickoff_utc	timestamp with time zone	YES	
+data_freshness	inactives_at	timestamp with time zone	YES	
+data_freshness	model_updated_at	timestamp with time zone	YES	
+data_freshness	news_scanned_at	timestamp with time zone	YES	
+data_freshness	experts_scanned_at	timestamp with time zone	YES	
+data_freshness	prices_updated_at	timestamp with time zone	YES	
+data_freshness	model_after_inactives	boolean	YES	
+data_freshness	news_after_inactives	boolean	YES	
+data_freshness	engine_last_started_at	timestamp with time zone	YES	
+ee_findings	id	integer	NO	
+ee_findings	title	text	YES	
+ee_findings	verdict	text	YES	
+ee_findings	confidence	text	YES	
+ee_findings	sample	text	YES	
+ee_findings	detail	text	YES	
+ee_findings	action	text	YES	
+ee_findings	updated_at	timestamp with time zone	YES	now()
+ee_game_lines	game_id	text	YES	
+ee_game_lines	season	integer	YES	
+ee_game_lines	week	integer	YES	
+ee_game_lines	game_type	text	YES	
+ee_game_lines	kickoff_utc	timestamp with time zone	YES	
+ee_game_lines	home_team	text	YES	
+ee_game_lines	away_team	text	YES	
+ee_game_lines	margin	integer	YES	
+ee_game_lines	nflverse_close	numeric	YES	
+ee_game_lines	event_id	text	YES	
+ee_game_lines	sp_open	numeric	YES	
+ee_game_lines	open_at	timestamp with time zone	YES	
+ee_game_lines	sp_d6	numeric	YES	
+ee_game_lines	sp_d3	numeric	YES	
+ee_game_lines	sp_d1	numeric	YES	
+ee_game_lines	sp_h3	numeric	YES	
+ee_game_lines	sp_close	numeric	YES	
+ee_game_lines	p_close	numeric	YES	
+ee_injury_events	season	integer	YES	
+ee_injury_events	week	integer	YES	
+ee_injury_events	team	text	YES	
+ee_injury_events	full_name	text	YES	
+ee_injury_events	position	text	YES	
+ee_injury_events	report_status	text	YES	
+ee_injury_events	date_modified	timestamp with time zone	YES	
+ee_injury_events	prev_week	integer	YES	
+ee_injury_events	prev_pct	numeric	YES	
+ee_injury_events	pos_group	text	YES	
+ee_injury_events	game_id	text	YES	
+ee_injury_events	kickoff_utc	timestamp with time zone	YES	
+ee_injury_events	is_home	boolean	YES	
+ee_kalshi_vegas	game_id	text	YES	
+ee_kalshi_vegas	ticker	text	YES	
+ee_kalshi_vegas	result	text	YES	
+ee_kalshi_vegas	kickoff_utc	timestamp with time zone	YES	
+ee_kalshi_vegas	ts	timestamp with time zone	YES	
+ee_kalshi_vegas	hrs_before	numeric	YES	
+ee_kalshi_vegas	k_mid	numeric	YES	
+ee_kalshi_vegas	yes_ask	numeric	YES	
+ee_kalshi_vegas	yes_bid	numeric	YES	
+ee_kalshi_vegas	volume	numeric	YES	
+ee_kalshi_vegas	v_prob	numeric	YES	
+ee_seen	user_id	uuid	NO	
+ee_seen	seen_at	timestamp with time zone	NO	now()
+ee_signals	id	bigint	NO	nextval('ee_signals_id_seq'::regclass)
+ee_signals	kind	text	NO	
+ee_signals	game_id	text	NO	
+ee_signals	bet_team	text	NO	
+ee_signals	fade_team	text	YES	
+ee_signals	ticker	text	YES	
+ee_signals	price	numeric	YES	
+ee_signals	vegas_prob	numeric	YES	
+ee_signals	gap_pts	numeric	YES	
+ee_signals	player	text	YES	
+ee_signals	player_status	text	YES	
+ee_signals	line_now	numeric	YES	
+ee_signals	line_early	numeric	YES	
+ee_signals	line_moved_pts	numeric	YES	
+ee_signals	bettable	boolean	NO	false
+ee_signals	note	text	YES	
+ee_signals	active	boolean	NO	true
+ee_signals	kickoff_utc	timestamp with time zone	YES	
+ee_signals	detected_at	timestamp with time zone	NO	now()
+ee_signals	last_seen_at	timestamp with time zone	NO	now()
+ee_signals	emailed_at	timestamp with time zone	YES	
+ee_signals	bet_side	text	NO	'yes'::text
+ee_signals	bet_label	text	YES	
+ee_signals	bet_line	numeric	YES	
+ee_signals	max_price	numeric	YES	
+email_log	id	bigint	NO	nextval('email_log_id_seq'::regclass)
+email_log	sent_at	timestamp with time zone	YES	now()
+email_log	user_id	uuid	YES	
+email_log	to_email	text	YES	
+email_log	kind	text	YES	
+email_log	subject	text	YES	
+email_log	status	text	YES	
+email_log	provider_id	text	YES	
+email_log	error	text	YES	
+engine_compare	season	integer	YES	
+engine_compare	week	integer	YES	
+engine_compare	game_id	text	YES	
+engine_compare	kickoff_utc	timestamp with time zone	YES	
+engine_compare	away_team	text	YES	
+engine_compare	home_team	text	YES	
+engine_compare	status	text	YES	
+engine_compare	live_pick	text	YES	
+engine_compare	live_spread	numeric	YES	
+engine_compare	live_rating	text	YES	
+engine_compare	live_bet_score	numeric	YES	
+engine_compare	live_result	text	YES	
+engine_compare	shadow_pick	text	YES	
+engine_compare	shadow_spread	numeric	YES	
+engine_compare	shadow_rating	text	YES	
+engine_compare	shadow_bet_score	numeric	YES	
+engine_compare	shadow_result	text	YES	
+engine_compare	disagree	boolean	YES	
+engine_compare	away_score	numeric	YES	
+engine_compare	home_score	numeric	YES	
+engine_triggers	id	bigint	NO	nextval('engine_triggers_id_seq'::regclass)
+engine_triggers	requested_at	timestamp with time zone	NO	now()
+engine_triggers	source	text	YES	
+engine_triggers	slot	timestamp with time zone	YES	
+engine_triggers	status	text	YES	
+engine_triggers	detail	text	YES	
+expert_consensus	game_id	text	YES	
+expert_consensus	n_spread	bigint	YES	
+expert_consensus	n_home	bigint	YES	
+expert_consensus	n_away	bigint	YES	
+expert_consensus	consensus_pick	text	YES	
+expert_consensus	consensus_pct	numeric	YES	
+expert_consensus	consensus_score	integer	YES	
+expert_consensus	n_over	bigint	YES	
+expert_consensus	n_under	bigint	YES	
+expert_consensus	expert_picks	jsonb	YES	
+expert_picks	id	bigint	NO	nextval('expert_picks_id_seq'::regclass)
+expert_picks	expert_id	integer	YES	
+expert_picks	game_id	text	YES	
+expert_picks	season	integer	YES	
+expert_picks	week	integer	YES	
+expert_picks	market	text	YES	
+expert_picks	pick_team	text	YES	
+expert_picks	pick_side	text	YES	
+expert_picks	line	numeric	YES	
+expert_picks	odds	integer	YES	
+expert_picks	units	numeric	YES	
+expert_picks	rationale	text	YES	
+expert_picks	source_url	text	YES	
+expert_picks	source_name	text	YES	
+expert_picks	published_at	date	YES	
+expert_picks	found_at	timestamp with time zone	YES	now()
+expert_picks	pick_type	text	YES	'pick'::text
+expert_record	expert	text	YES	
+expert_record	season	integer	YES	
+expert_record	week	integer	YES	
+expert_record	game_id	text	YES	
+expert_record	market	text	YES	
+expert_record	pick_team	text	YES	
+expert_record	line	numeric	YES	
+expert_record	source_url	text	YES	
+expert_record	result	text	YES	
+expert_record	expert_id	integer	YES	
+expert_record	tier	text	YES	
+expert_record	outlet	text	YES	
+expert_scans	expert_id	integer	NO	
+expert_scans	season	integer	NO	
+expert_scans	week	integer	NO	
+expert_scans	scanned_at	timestamp with time zone	YES	now()
+expert_scans	picks_found	integer	YES	
+expert_scans	notes	text	YES	
+expert_weights	expert_id	integer	YES	
+expert_weights	name	text	YES	
+expert_weights	tier	text	YES	
+expert_weights	outlet	text	YES	
+expert_weights	ats_w	bigint	YES	
+expert_weights	ats_l	bigint	YES	
+expert_weights	su_w	bigint	YES	
+expert_weights	su_l	bigint	YES	
+expert_weights	ats_rate_shrunk	numeric	YES	
+expert_weights	ats_weight	numeric	YES	
+expert_weights	su_rate_shrunk	numeric	YES	
+expert_weights	su_weight	numeric	YES	
+expert_weights	ats_graded	bigint	YES	
+expert_weights	su_graded	bigint	YES	
+experts	id	integer	NO	nextval('experts_id_seq'::regclass)
+experts	name	text	NO	
+experts	affiliation	text	YES	
+experts	where_published	text	YES	
+experts	active	boolean	YES	true
+experts	tier	text	YES	'core'::text
+experts	outlet	text	YES	
+funds_alerts	id	bigint	NO	nextval('funds_alerts_id_seq'::regclass)
+funds_alerts	user_id	uuid	NO	
+funds_alerts	alert_key	text	NO	
+funds_alerts	need	numeric	YES	
+funds_alerts	have	numeric	YES	
+funds_alerts	short	numeric	YES	
+funds_alerts	sent_at	timestamp with time zone	YES	now()
+game_board	game_id	text	YES	
+game_board	season	integer	YES	
+game_board	week	integer	YES	
+game_board	game_type	text	YES	
+game_board	kickoff_utc	timestamp with time zone	YES	
+game_board	slate	text	YES	
+game_board	game_date_et	date	YES	
+game_board	home_team	text	YES	
+game_board	away_team	text	YES	
+game_board	home_score	integer	YES	
+game_board	away_score	integer	YES	
+game_board	stadium	text	YES	
+game_board	stadium_id	text	YES	
+game_board	roof	text	YES	
+game_board	surface	text	YES	
+game_board	spread_line	numeric	YES	
+game_board	total_line	numeric	YES	
+game_board	home_moneyline	integer	YES	
+game_board	away_moneyline	integer	YES	
+game_board	home_rest	integer	YES	
+game_board	away_rest	integer	YES	
+game_board	home_qb	text	YES	
+game_board	away_qb	text	YES	
+game_board	div_game	boolean	YES	
+game_board	model_home_prob	numeric	YES	
+game_board	blend_home_prob	numeric	YES	
+game_board	market_home_prob	numeric	YES	
+game_board	spread_home_prob	numeric	YES	
+game_board	model_margin	numeric	YES	
+game_board	home_cover_prob	numeric	YES	
+game_board	categories	jsonb	YES	
+game_board	top_features	jsonb	YES	
+game_board	home_starters_out	jsonb	YES	
+game_board	away_starters_out	jsonb	YES	
+game_board	home_inj_total	numeric	YES	
+game_board	away_inj_total	numeric	YES	
+game_board	questionable_starters	integer	YES	
+game_board	weather_severity	numeric	YES	
+game_board	early_season	integer	YES	
+game_board	model_market_gap	numeric	YES	
+game_board	updated_at	timestamp with time zone	YES	
+game_board	temp_f	numeric	YES	
+game_board	wind_mph	numeric	YES	
+game_board	gust_mph	numeric	YES	
+game_board	wind_dir	text	YES	
+game_board	humidity	numeric	YES	
+game_board	precip_prob	numeric	YES	
+game_board	pressure_mb	numeric	YES	
+game_board	short_forecast	text	YES	
+game_board	indoor	boolean	YES	
+game_board	weather_source	text	YES	
+game_board	weather_at	timestamp with time zone	YES	
+game_board	home_adj_pts	numeric	YES	
+game_board	away_adj_pts	numeric	YES	
+game_board	home_confidence	numeric	YES	
+game_board	away_confidence	numeric	YES	
+game_board	volatility	numeric	YES	
+game_board	home_items	jsonb	YES	
+game_board	away_items	jsonb	YES	
+game_board	game_brief	text	YES	
+game_board	scanned_at	timestamp with time zone	YES	
+game_board	news_pts	numeric	YES	
+game_board	adj_margin	numeric	YES	
+game_board	adj_home_cover	numeric	YES	
+game_board	adj_home_win	numeric	YES	
+game_board	ats_pick	text	YES	
+game_board	ats_pick_prob	numeric	YES	
+game_board	ev_home_adj	numeric	YES	
+game_board	ev_away_adj	numeric	YES	
+game_board	risk_index	numeric	YES	
+game_board	ml_pick	text	YES	
+game_board	ml_pick_ev	numeric	YES	
+game_board	raw_score	numeric	YES	
+game_board	expert_count	bigint	YES	
+game_board	consensus_pick	text	YES	
+game_board	consensus_pct	numeric	YES	
+game_board	consensus_score	integer	YES	
+game_board	consensus_rating	text	YES	
+game_board	pbm_agrees_with_experts	boolean	YES	
+game_board	n_over	bigint	YES	
+game_board	n_under	bigint	YES	
+game_board	expert_picks	jsonb	YES	
+game_board	bet_score	integer	YES	
+game_board	rating	text	YES	
+game_board	risk_rating	text	YES	
+game_board	units	numeric	YES	
+game_board	predicted_winner	text	YES	
+game_board	predicted_winner_prob	numeric	YES	
+game_board	kalshi_home_prob	numeric	YES	
+game_board	kalshi_winner	text	YES	
+game_board	kalshi_winner_prob	numeric	YES	
+game_board	kalshi_home_ask	numeric	YES	
+game_board	kalshi_away_ask	numeric	YES	
+game_board	kalshi_updated_at	timestamp with time zone	YES	
+game_board	kalshi_edge_pts	numeric	YES	
+game_board	pbm_agrees_with_kalshi	boolean	YES	
+game_board	kalshi_value_side	text	YES	
+game_board	kalshi_value_pts	numeric	YES	
+game_board	vegas_home_prob	numeric	YES	
+game_board	vegas_winner	text	YES	
+game_board	vegas_winner_prob	numeric	YES	
+game_board	vegas_favorite	text	YES	
+game_board	vegas_fav_points	numeric	YES	
+game_board	vegas_edge_pts	numeric	YES	
+game_board	pbm_agrees_with_vegas	boolean	YES	
+game_board	home_qb_out	text	YES	
+game_board	away_qb_out	text	YES	
+game_money_flow	game_id	text	YES	
+game_money_flow	backed_team	text	YES	
+game_money_flow	trades	bigint	YES	
+game_money_flow	contracts	numeric	YES	
+game_money_flow	dollars	numeric	YES	
+game_money_flow	big_trades	bigint	YES	
+game_money_flow	big_dollars	numeric	YES	
+game_money_flow	dollars_24h	numeric	YES	
+game_money_flow	trades_24h	bigint	YES	
+game_money_flow	dollars_3h	numeric	YES	
+game_money_flow	home_team	text	YES	
+game_money_flow	away_team	text	YES	
+game_money_flow	kickoff_utc	timestamp with time zone	YES	
+game_money_flow	pct_dollars	numeric	YES	
+game_money_flow	pct_trades	numeric	YES	
+game_money_flow	avg_trade_usd	numeric	YES	
+game_money_flow	partial	boolean	YES	
+games	game_id	text	NO	
+games	season	integer	YES	
+games	week	integer	YES	
+games	game_type	text	YES	
+games	kickoff_utc	timestamp with time zone	YES	
+games	slate	text	YES	
+games	game_date_et	date	YES	
+games	home_team	text	YES	
+games	away_team	text	YES	
+games	home_score	integer	YES	
+games	away_score	integer	YES	
+games	stadium	text	YES	
+games	stadium_id	text	YES	
+games	roof	text	YES	
+games	surface	text	YES	
+games	spread_line	numeric	YES	
+games	total_line	numeric	YES	
+games	home_moneyline	integer	YES	
+games	away_moneyline	integer	YES	
+games	home_rest	integer	YES	
+games	away_rest	integer	YES	
+games	home_qb	text	YES	
+games	away_qb	text	YES	
+games	div_game	boolean	YES	
+grade_scorecard	season	integer	YES	
+grade_scorecard	week	integer	YES	
+grade_scorecard	grade	text	YES	
+grade_scorecard	is_pick	boolean	YES	
+grade_scorecard	grade_sort	integer	YES	
+grade_scorecard	games	bigint	YES	
+grade_scorecard	ats_w	bigint	YES	
+grade_scorecard	ats_l	bigint	YES	
+grade_scorecard	ats_p	bigint	YES	
+grade_scorecard	ats_win_pct	numeric	YES	
+grade_scorecard	su_w	bigint	YES	
+grade_scorecard	su_l	bigint	YES	
+grade_scorecard	su_win_pct	numeric	YES	
+grade_scorecard	flat_units	numeric	YES	
+hist_games	game_id	text	NO	
+hist_games	season	integer	YES	
+hist_games	game_type	text	YES	
+hist_games	week	integer	YES	
+hist_games	gameday	date	YES	
+hist_games	gametime	text	YES	
+hist_games	kickoff_utc	timestamp with time zone	YES	
+hist_games	away_team	text	YES	
+hist_games	home_team	text	YES	
+hist_games	away_score	integer	YES	
+hist_games	home_score	integer	YES	
+hist_games	result	integer	YES	
+hist_games	spread_line	numeric	YES	
+hist_games	total_line	numeric	YES	
+hist_games	away_moneyline	integer	YES	
+hist_games	home_moneyline	integer	YES	
+hist_games	div_game	integer	YES	
+hist_games	roof	text	YES	
+hist_injuries	season	integer	NO	
+hist_injuries	game_type	text	NO	
+hist_injuries	week	integer	NO	
+hist_injuries	team	text	NO	
+hist_injuries	gsis_id	text	NO	
+hist_injuries	position	text	YES	
+hist_injuries	full_name	text	YES	
+hist_injuries	report_primary_injury	text	YES	
+hist_injuries	report_status	text	YES	
+hist_injuries	practice_status	text	YES	
+hist_injuries	date_modified	timestamp with time zone	YES	
+hist_kalshi_markets	ticker	text	NO	
+hist_kalshi_markets	event_ticker	text	YES	
+hist_kalshi_markets	series	text	YES	
+hist_kalshi_markets	title	text	YES	
+hist_kalshi_markets	yes_team	text	YES	
+hist_kalshi_markets	open_time	timestamp with time zone	YES	
+hist_kalshi_markets	close_time	timestamp with time zone	YES	
+hist_kalshi_markets	result	text	YES	
+hist_kalshi_markets	prices_loaded	boolean	YES	false
+hist_kalshi_markets	candles	integer	YES	
+hist_kalshi_markets	error	text	YES	
+hist_kalshi_markets	hist	boolean	YES	false
+hist_kalshi_prices	ticker	text	NO	
+hist_kalshi_prices	ts	timestamp with time zone	NO	
+hist_kalshi_prices	yes_bid	numeric	YES	
+hist_kalshi_prices	yes_ask	numeric	YES	
+hist_kalshi_prices	price	numeric	YES	
+hist_kalshi_prices	volume	numeric	YES	
+hist_kalshi_prices	open_interest	numeric	YES	
+hist_load_log	id	bigint	NO	nextval('hist_load_log_id_seq'::regclass)
+hist_load_log	at	timestamp with time zone	YES	now()
+hist_load_log	dataset	text	YES	
+hist_load_log	season	integer	YES	
+hist_load_log	rows	integer	YES	
+hist_load_log	note	text	YES	
+hist_snaps	game_id	text	NO	
+hist_snaps	season	integer	YES	
+hist_snaps	week	integer	YES	
+hist_snaps	team	text	YES	
+hist_snaps	player	text	YES	
+hist_snaps	pfr_player_id	text	NO	
+hist_snaps	position	text	YES	
+hist_snaps	offense_pct	numeric	YES	
+hist_snaps	defense_pct	numeric	YES	
+hist_snaps	st_pct	numeric	YES	
+hr_game_lines	game_id	text	NO	
+hr_game_lines	book	text	YES	
+hr_game_lines	home_team	text	YES	
+hr_game_lines	away_team	text	YES	
+hr_game_lines	kickoff_utc	timestamp with time zone	YES	
+hr_game_lines	home_spread	numeric	YES	
+hr_game_lines	home_spread_price	integer	YES	
+hr_game_lines	away_spread_price	integer	YES	
+hr_game_lines	home_ml	integer	YES	
+hr_game_lines	away_ml	integer	YES	
+hr_game_lines	total	numeric	YES	
+hr_game_lines	over_price	integer	YES	
+hr_game_lines	under_price	integer	YES	
+hr_game_lines	book_updated	timestamp with time zone	YES	
+hr_game_lines	fetched_at	timestamp with time zone	YES	now()
+hr_game_lines_history	id	bigint	NO	nextval('hr_game_lines_history_id_seq'::regclass)
+hr_game_lines_history	game_id	text	YES	
+hr_game_lines_history	book	text	YES	
+hr_game_lines_history	home_team	text	YES	
+hr_game_lines_history	away_team	text	YES	
+hr_game_lines_history	kickoff_utc	timestamp with time zone	YES	
+hr_game_lines_history	home_spread	numeric	YES	
+hr_game_lines_history	home_spread_price	integer	YES	
+hr_game_lines_history	away_spread_price	integer	YES	
+hr_game_lines_history	home_ml	integer	YES	
+hr_game_lines_history	away_ml	integer	YES	
+hr_game_lines_history	total	numeric	YES	
+hr_game_lines_history	over_price	integer	YES	
+hr_game_lines_history	under_price	integer	YES	
+hr_game_lines_history	fetched_at	timestamp with time zone	YES	now()
+hr_research_board	game_id	text	YES	
+hr_research_board	season	integer	YES	
+hr_research_board	week	integer	YES	
+hr_research_board	kickoff_utc	timestamp with time zone	YES	
+hr_research_board	away_team	text	YES	
+hr_research_board	home_team	text	YES	
+hr_research_board	fetched_at	timestamp with time zone	YES	
+hr_research_board	home_spread	numeric	YES	
+hr_research_board	home_spread_price	integer	YES	
+hr_research_board	away_spread_price	integer	YES	
+hr_research_board	spread_pick	text	YES	
+hr_research_board	spread_prob	numeric	YES	
+hr_research_board	spread_edge	numeric	YES	
+hr_research_board	spread_odds	integer	YES	
+hr_research_board	home_ml	integer	YES	
+hr_research_board	away_ml	integer	YES	
+hr_research_board	ml_pick	text	YES	
+hr_research_board	ml_prob	numeric	YES	
+hr_research_board	ml_edge	numeric	YES	
+hr_research_board	ml_odds	integer	YES	
+hr_research_board	total	numeric	YES	
+hr_research_board	over_price	integer	YES	
+hr_research_board	under_price	integer	YES	
+hr_research_board	pred_total	numeric	YES	
+hr_research_board	total_pick	text	YES	
+hr_research_board	total_prob	numeric	YES	
+hr_research_board	total_edge	numeric	YES	
+hr_research_board	total_odds	integer	YES	
+hr_research_board	spread_grade	text	YES	
+hr_research_board	ml_grade	text	YES	
+hr_research_board	total_grade	text	YES	
+jamie_baselines	player_key	text	NO	
+jamie_baselines	player_id	text	YES	
+jamie_baselines	player_name	text	YES	
+jamie_baselines	team	text	YES	
+jamie_baselines	position	text	YES	
+jamie_baselines	pre_rec	numeric	YES	
+jamie_baselines	pre_rec_yds	numeric	YES	
+jamie_baselines	pre_rush_yds	numeric	YES	
+jamie_baselines	pre_pass_yds	numeric	YES	
+jamie_baselines	pre_rr_yds	numeric	YES	
+jamie_baselines	games	integer	YES	
+jamie_baselines	games_this_season	integer	YES	
+jamie_baselines	last_week	integer	YES	
+jamie_baselines	last_season	integer	YES	
+jamie_baselines	updated_at	timestamp with time zone	YES	now()
+jamie_game_parlays	game_id	text	NO	
+jamie_game_parlays	kind	text	NO	
+jamie_game_parlays	n_legs	integer	NO	
+jamie_game_parlays	legs	jsonb	YES	
+jamie_game_parlays	our_prob	numeric	YES	
+jamie_game_parlays	cost	numeric	YES	
+jamie_game_parlays	payout_multiple	numeric	YES	
+jamie_game_parlays	grade	text	YES	
+jamie_game_parlays	games	integer	YES	
+jamie_game_parlays	relaxed	boolean	NO	false
+jamie_game_parlays	updated_at	timestamp with time zone	YES	now()
+jamie_leg_log	id	bigint	NO	nextval('jamie_leg_log_id_seq'::regclass)
+jamie_leg_log	ticker	text	YES	
+jamie_leg_log	side	text	YES	
+jamie_leg_log	game_id	text	YES	
+jamie_leg_log	player_key	text	YES	
+jamie_leg_log	player_name	text	YES	
+jamie_leg_log	stat	text	YES	
+jamie_leg_log	strike	numeric	YES	
+jamie_leg_log	label	text	YES	
+jamie_leg_log	our_prob	numeric	YES	
+jamie_leg_log	price	numeric	YES	
+jamie_leg_log	edge	numeric	YES	
+jamie_leg_log	grade	text	YES	
+jamie_leg_log	game_state	text	YES	
+jamie_leg_log	minutes_left	numeric	YES	
+jamie_leg_log	logged_at	timestamp with time zone	YES	now()
+jamie_leg_log	model_prob	numeric	YES	
+jamie_leg_results	id	bigint	YES	
+jamie_leg_results	ticker	text	YES	
+jamie_leg_results	side	text	YES	
+jamie_leg_results	game_id	text	YES	
+jamie_leg_results	player_key	text	YES	
+jamie_leg_results	player_name	text	YES	
+jamie_leg_results	stat	text	YES	
+jamie_leg_results	strike	numeric	YES	
+jamie_leg_results	label	text	YES	
+jamie_leg_results	our_prob	numeric	YES	
+jamie_leg_results	price	numeric	YES	
+jamie_leg_results	edge	numeric	YES	
+jamie_leg_results	grade	text	YES	
+jamie_leg_results	game_state	text	YES	
+jamie_leg_results	minutes_left	numeric	YES	
+jamie_leg_results	logged_at	timestamp with time zone	YES	
+jamie_leg_results	final_value	numeric	YES	
+jamie_leg_results	final	boolean	YES	
+jamie_leg_results	result	text	YES	
+jamie_leg_results	season	integer	YES	
+jamie_leg_results	week	integer	YES	
+jamie_leg_results	decided_early	boolean	YES	
+jamie_leg_results	model_prob	numeric	YES	
+jamie_legs	ticker	text	NO	
+jamie_legs	game_id	text	YES	
+jamie_legs	matchup	text	YES	
+jamie_legs	player_key	text	YES	
+jamie_legs	player_name	text	YES	
+jamie_legs	team	text	YES	
+jamie_legs	stat	text	YES	
+jamie_legs	strike	numeric	YES	
+jamie_legs	label	text	YES	
+jamie_legs	side	text	YES	
+jamie_legs	our_prob	numeric	YES	
+jamie_legs	price	numeric	YES	
+jamie_legs	edge	numeric	YES	
+jamie_legs	grade	text	YES	
+jamie_legs	current	numeric	YES	
+jamie_legs	projected	numeric	YES	
+jamie_legs	normal_game	numeric	YES	
+jamie_legs	minutes_left	numeric	YES	
+jamie_legs	game_state	text	YES	
+jamie_legs	kalshi_url	text	YES	
+jamie_legs	updated_at	timestamp with time zone	YES	now()
+jamie_market_prior	game_id	text	NO	
+jamie_market_prior	player_key	text	NO	
+jamie_market_prior	stat	text	NO	
+jamie_market_prior	median	numeric	YES	
+jamie_market_prior	captured_at	timestamp with time zone	YES	now()
+jamie_parlay_log	id	bigint	NO	nextval('jamie_parlay_log_id_seq'::regclass)
+jamie_parlay_log	leg_key	text	YES	
+jamie_parlay_log	n_legs	integer	YES	
+jamie_parlay_log	legs	jsonb	YES	
+jamie_parlay_log	our_prob	numeric	YES	
+jamie_parlay_log	cost	numeric	YES	
+jamie_parlay_log	grade	text	YES	
+jamie_parlay_log	logged_at	timestamp with time zone	YES	now()
+jamie_parlay_log	kind	text	NO	'safe'::text
+jamie_parlay_results	id	bigint	YES	
+jamie_parlay_results	leg_key	text	YES	
+jamie_parlay_results	n_legs	integer	YES	
+jamie_parlay_results	legs	jsonb	YES	
+jamie_parlay_results	our_prob	numeric	YES	
+jamie_parlay_results	cost	numeric	YES	
+jamie_parlay_results	grade	text	YES	
+jamie_parlay_results	logged_at	timestamp with time zone	YES	
+jamie_parlay_results	legs_won	bigint	YES	
+jamie_parlay_results	legs_lost	bigint	YES	
+jamie_parlay_results	legs_final	bigint	YES	
+jamie_parlay_results	kind	text	YES	
+jamie_parlay_scorecard	scope	text	YES	
+jamie_parlay_scorecard	parlay_type	text	YES	
+jamie_parlay_scorecard	grade	text	YES	
+jamie_parlay_scorecard	wins	bigint	YES	
+jamie_parlay_scorecard	losses	bigint	YES	
+jamie_parlay_scorecard	pending	bigint	YES	
+jamie_parlay_scorecard	win_pct	numeric	YES	
+jamie_parlay_scorecard	said_pct	numeric	YES	
+jamie_parlay_scorecard	avg_price_cents	numeric	YES	
+jamie_parlay_scorecard	return_pct	numeric	YES	
+jamie_parlays	n_legs	integer	NO	
+jamie_parlays	legs	jsonb	YES	
+jamie_parlays	our_prob	numeric	YES	
+jamie_parlays	cost	numeric	YES	
+jamie_parlays	payout_multiple	numeric	YES	
+jamie_parlays	grade	text	YES	
+jamie_parlays	games	integer	YES	
+jamie_parlays	updated_at	timestamp with time zone	YES	now()
+jamie_parlays	kind	text	NO	'safe'::text
+jamie_parlays	relaxed	boolean	NO	false
+jamie_player_stats	game_id	text	NO	
+jamie_player_stats	player_key	text	NO	
+jamie_player_stats	stat	text	NO	
+jamie_player_stats	value	numeric	YES	
+jamie_player_stats	final	boolean	YES	false
+jamie_player_stats	updated_at	timestamp with time zone	YES	now()
+jamie_record	kind	text	YES	
+jamie_record	grade	text	YES	
+jamie_record	wins	bigint	YES	
+jamie_record	losses	bigint	YES	
+jamie_record	profit_per_contract	numeric	YES	
+jamie_record	avg_said	numeric	YES	
+jamie_record	avg_cost	numeric	YES	
+jamie_scorecard	scope	text	YES	
+jamie_scorecard	grade	text	YES	
+jamie_scorecard	wins	bigint	YES	
+jamie_scorecard	losses	bigint	YES	
+jamie_scorecard	pending	bigint	YES	
+jamie_scorecard	win_pct	numeric	YES	
+jamie_scorecard	said_pct	numeric	YES	
+jamie_scorecard	profit_per_contract	numeric	YES	
+jamie_scorecard	return_pct	numeric	YES	
+jamie_ticker_map	ticker	text	NO	
+jamie_ticker_map	game_id	text	YES	
+jamie_ticker_map	player_key	text	YES	
+jamie_ticker_map	player_name	text	YES	
+jamie_ticker_map	stat	text	YES	
+jamie_ticker_map	strike	numeric	YES	
+jamie_ticker_map	label	text	YES	
+jamie_ticker_map	updated_at	timestamp with time zone	YES	now()
+kalshi_alt_lines	ticker	text	NO	
+kalshi_alt_lines	game_id	text	YES	
+kalshi_alt_lines	event_ticker	text	YES	
+kalshi_alt_lines	team	text	YES	
+kalshi_alt_lines	threshold	numeric	YES	
+kalshi_alt_lines	yes_bid	numeric	YES	
+kalshi_alt_lines	yes_ask	numeric	YES	
+kalshi_alt_lines	last_price	numeric	YES	
+kalshi_alt_lines	volume	numeric	YES	
+kalshi_alt_lines	open_interest	numeric	YES	
+kalshi_alt_lines	status	text	YES	
+kalshi_alt_lines	fetched_at	timestamp with time zone	YES	now()
+kalshi_alt_lines	event_title	text	YES	
+kalshi_alt_lines	market_title	text	YES	
+kalshi_balance_log	id	bigint	NO	nextval('kalshi_balance_log_id_seq'::regclass)
+kalshi_balance_log	at	timestamp with time zone	NO	now()
+kalshi_balance_log	balance_usd	numeric	YES	
+kalshi_balance_log	portfolio_value_usd	numeric	YES	
+kalshi_balance_log	total_usd	numeric	YES	
+kalshi_big_trades	trade_id	text	NO	
+kalshi_big_trades	game_id	text	YES	
+kalshi_big_trades	ticker	text	YES	
+kalshi_big_trades	backed_team	text	YES	
+kalshi_big_trades	contracts	numeric	YES	
+kalshi_big_trades	price	numeric	YES	
+kalshi_big_trades	dollars	numeric	YES	
+kalshi_big_trades	created_time	timestamp with time zone	YES	
+kalshi_big_trades	is_block	boolean	YES	
+kalshi_deposits	id	text	NO	
+kalshi_deposits	amount	numeric	YES	
+kalshi_deposits	fee	numeric	YES	
+kalshi_deposits	status	text	YES	
+kalshi_deposits	type	text	YES	
+kalshi_deposits	created_at	timestamp with time zone	YES	
+kalshi_deposits	finalized_at	timestamp with time zone	YES	
+kalshi_deposits	credited_to	text	YES	
+kalshi_deposits	claim_id	bigint	YES	
+kalshi_deposits	seen_at	timestamp with time zone	YES	now()
+kalshi_flow_cursor	ticker	text	NO	
+kalshi_flow_cursor	last_time	timestamp with time zone	YES	
+kalshi_flow_cursor	partial	boolean	YES	false
+kalshi_flow_cursor	updated_at	timestamp with time zone	YES	now()
+kalshi_flow_hourly	game_id	text	YES	
+kalshi_flow_hourly	ticker	text	NO	
+kalshi_flow_hourly	hour	timestamp with time zone	NO	
+kalshi_flow_hourly	backed_team	text	NO	
+kalshi_flow_hourly	trades	integer	YES	0
+kalshi_flow_hourly	contracts	numeric	YES	0
+kalshi_flow_hourly	dollars	numeric	YES	0
+kalshi_flow_hourly	big_trades	integer	YES	0
+kalshi_flow_hourly	big_dollars	numeric	YES	0
+kalshi_markets	game_id	text	NO	
+kalshi_markets	event_ticker	text	YES	
+kalshi_markets	home_ticker	text	YES	
+kalshi_markets	away_ticker	text	YES	
+kalshi_markets	home_yes_bid	numeric	YES	
+kalshi_markets	home_yes_ask	numeric	YES	
+kalshi_markets	away_yes_bid	numeric	YES	
+kalshi_markets	away_yes_ask	numeric	YES	
+kalshi_markets	home_last	numeric	YES	
+kalshi_markets	away_last	numeric	YES	
+kalshi_markets	home_prob	numeric	YES	
+kalshi_markets	volume	numeric	YES	
+kalshi_markets	fetched_at	timestamp with time zone	YES	now()
+kalshi_price_history	ticker	text	NO	
+kalshi_price_history	at	timestamp with time zone	NO	now()
+kalshi_price_history	game_id	text	YES	
+kalshi_price_history	yes_bid	numeric	YES	
+kalshi_price_history	yes_ask	numeric	YES	
+kalshi_price_history	mid	numeric	YES	
+kalshi_status	key	text	NO	
+kalshi_status	ok	boolean	NO	true
+kalshi_status	failed_at	timestamp with time zone	YES	
+kalshi_status	ok_at	timestamp with time zone	YES	
+kalshi_status	last_alert_at	timestamp with time zone	YES	
+kalshi_status	detail	text	YES	
+kalshi_total_fetch	id	integer	NO	1
+kalshi_total_fetch	req_id	bigint	YES	
+kalshi_total_fetch	asked_at	timestamp with time zone	YES	
+kalshi_total_lines	ticker	text	NO	
+kalshi_total_lines	event_ticker	text	YES	
+kalshi_total_lines	strike	numeric	YES	
+kalshi_total_lines	yes_ask	numeric	YES	
+kalshi_total_lines	no_ask	numeric	YES	
+kalshi_total_lines	yes_bid	numeric	YES	
+kalshi_total_lines	no_bid	numeric	YES	
+kalshi_total_lines	status	text	YES	
+kalshi_total_lines	updated_at	timestamp with time zone	YES	now()
+learning_runs	id	bigint	NO	nextval('learning_runs_id_seq'::regclass)
+learning_runs	season	integer	YES	
+learning_runs	week	integer	YES	
+learning_runs	run_at	timestamp with time zone	YES	now()
+learning_runs	summary	text	YES	
+learning_runs	reviews	jsonb	YES	
+learning_runs	new_lessons	jsonb	YES	
+learning_runs	param_changes	jsonb	YES	
+learning_runs	stats	jsonb	YES	
+learning_runs	error	text	YES	
+member_bankroll	user_id	uuid	YES	
+member_bankroll	email	text	YES	
+member_bankroll	display_name	text	YES	
+member_bankroll	bankroll_start	numeric	YES	
+member_bankroll	settled_pnl	numeric	YES	
+member_bankroll	open_stake	numeric	YES	
+member_bankroll	available	numeric	YES	
+member_deposit_claims	id	bigint	NO	nextval('member_deposit_claims_id_seq'::regclass)
+member_deposit_claims	user_id	uuid	NO	
+member_deposit_claims	member_email	text	NO	
+member_deposit_claims	amount	numeric	NO	
+member_deposit_claims	status	text	NO	'pending'::text
+member_deposit_claims	kalshi_deposit_id	text	YES	
+member_deposit_claims	created_at	timestamp with time zone	YES	now()
+member_deposit_claims	matched_at	timestamp with time zone	YES	
+member_money_log	id	bigint	NO	nextval('member_money_log_id_seq'::regclass)
+member_money_log	member_email	text	NO	
+member_money_log	amount	numeric	NO	
+member_money_log	kind	text	NO	
+member_money_log	note	text	YES	
+member_money_log	created_by	uuid	YES	
+member_money_log	created_at	timestamp with time zone	YES	now()
+member_withdrawals	id	bigint	NO	nextval('member_withdrawals_id_seq'::regclass)
+member_withdrawals	user_id	uuid	NO	
+member_withdrawals	member_email	text	NO	
+member_withdrawals	amount	numeric	NO	
+member_withdrawals	status	text	NO	'requested'::text
+member_withdrawals	note	text	YES	
+member_withdrawals	created_at	timestamp with time zone	YES	now()
+member_withdrawals	done_at	timestamp with time zone	YES	
+model_calibration	source	text	YES	
+model_calibration	bucket	text	YES	
+model_calibration	bucket_order	integer	YES	
+model_calibration	n	bigint	YES	
+model_calibration	predicted_pct	numeric	YES	
+model_calibration	actual_pct	numeric	YES	
+model_calibration	gap_pts	numeric	YES	
+model_calibration_points	source	text	YES	
+model_calibration_points	season	integer	YES	
+model_calibration_points	week	integer	YES	
+model_calibration_points	predicted	numeric	YES	
+model_calibration_points	hit	integer	YES	
+model_calibration_points	market_predicted	numeric	YES	
+model_param_history	id	bigint	NO	nextval('model_param_history_id_seq'::regclass)
+model_param_history	run_at	timestamp with time zone	YES	now()
+model_param_history	season	integer	YES	
+model_param_history	week	integer	YES	
+model_param_history	key	text	YES	
+model_param_history	old_value	numeric	YES	
+model_param_history	new_value	numeric	YES	
+model_param_history	best_value	numeric	YES	
+model_param_history	n_games	integer	YES	
+model_param_history	n_lines	integer	YES	
+model_param_history	logloss_current	numeric	YES	
+model_param_history	logloss_best	numeric	YES	
+model_param_history	action	text	YES	
+model_param_history	note	text	YES	
+model_params	key	text	NO	
+model_params	value	numeric	NO	
+model_params	default_value	numeric	NO	
+model_params	min_value	numeric	NO	
+model_params	max_value	numeric	NO	
+model_params	max_step	numeric	NO	
+model_params	min_games	integer	NO	
+model_params	label	text	YES	
+model_params	description	text	YES	
+model_params	updated_at	timestamp with time zone	YES	now()
+model_runs	id	bigint	NO	nextval('model_runs_id_seq'::regclass)
+model_runs	model_version	text	YES	
+model_runs	created_at	timestamp with time zone	YES	now()
+model_runs	train_seasons	text	YES	
+model_runs	backtest	jsonb	YES	
+model_runs	feature_importance	jsonb	YES	
+model_scores	source	text	YES	
+model_scores	n	bigint	YES	
+model_scores	brier_ours	numeric	YES	
+model_scores	brier_market	numeric	YES	
+model_scores	overall_gap_pts	numeric	YES	
+model_scores	verdict	text	YES	
+my_bet_clv	id	bigint	YES	
+my_bet_clv	user_id	uuid	YES	
+my_bet_clv	game_id	text	YES	
+my_bet_clv	market	text	YES	
+my_bet_clv	pick	text	YES	
+my_bet_clv	placed_at	timestamp with time zone	YES	
+my_bet_clv	stake	numeric	YES	
+my_bet_clv	result	text	YES	
+my_bet_clv	price_paid	numeric	YES	
+my_bet_clv	closing_prob	numeric	YES	
+my_bet_clv	clv_pts	numeric	YES	
+my_bet_clv	beat_close	boolean	YES	
+my_bet_history	id	bigint	YES	
+my_bet_history	user_id	uuid	YES	
+my_bet_history	game_id	text	YES	
+my_bet_history	book	text	YES	
+my_bet_history	market	text	YES	
+my_bet_history	pick	text	YES	
+my_bet_history	line	numeric	YES	
+my_bet_history	odds	integer	YES	
+my_bet_history	stake	numeric	YES	
+my_bet_history	placed_at	timestamp with time zone	YES	
+my_bet_history	status	text	YES	
+my_bet_history	result	text	YES	
+my_bet_history	payout	numeric	YES	
+my_bet_history	external_order_id	text	YES	
+my_bet_history	ticker	text	YES	
+my_bet_history	side	text	YES	
+my_bet_history	contracts	numeric	YES	
+my_bet_history	grade	text	YES	
+my_bet_history	settled_at	timestamp with time zone	YES	
+my_bet_history	season	integer	YES	
+my_bet_history	week	integer	YES	
+my_bet_history	home_team	text	YES	
+my_bet_history	away_team	text	YES	
+my_bet_history	home_score	integer	YES	
+my_bet_history	away_score	integer	YES	
+my_bet_history	kickoff_utc	timestamp with time zone	YES	
+my_bet_history	profit	numeric	YES	
+my_bet_history	result_label	text	YES	
+my_bet_summary	season	integer	YES	
+my_bet_summary	week	integer	YES	
+my_bet_summary	market	text	YES	
+my_bet_summary	bets	bigint	YES	
+my_bet_summary	wins	bigint	YES	
+my_bet_summary	losses	bigint	YES	
+my_bet_summary	pushes	bigint	YES	
+my_bet_summary	open_bets	bigint	YES	
+my_bet_summary	staked	numeric	YES	
+my_bet_summary	returned	numeric	YES	
+my_bet_summary	profit	numeric	YES	
+my_bet_summary	roi_pct	numeric	YES	
+my_bets	id	bigint	NO	nextval('my_bets_id_seq'::regclass)
+my_bets	user_id	uuid	NO	auth.uid()
+my_bets	game_id	text	YES	
+my_bets	book	text	YES	
+my_bets	market	text	YES	
+my_bets	pick	text	YES	
+my_bets	line	numeric	YES	
+my_bets	odds	integer	YES	
+my_bets	stake	numeric	YES	
+my_bets	placed_at	timestamp with time zone	YES	now()
+my_bets	status	text	YES	'open'::text
+my_bets	result	text	YES	
+my_bets	payout	numeric	YES	
+my_bets	external_order_id	text	YES	
+my_bets	ticker	text	YES	
+my_bets	side	text	YES	
+my_bets	contracts	numeric	YES	
+my_bets	grade	text	YES	
+my_bets	settled_at	timestamp with time zone	YES	
+my_bets	legs	jsonb	YES	
+my_bets	origin	text	YES	'manual'::text
+my_bets	order_mode	text	YES	
+my_bets	ask_at_order	numeric	YES	
+my_bets	fill_status	text	YES	
+my_bets	fill_checked_at	timestamp with time zone	YES	
+my_bets	kalshi_cost	numeric	YES	
+my_bets	kalshi_contracts	numeric	YES	
+my_bets	stake_logged	numeric	YES	
+my_parlay_live_legs	bet_id	bigint	YES	
+my_parlay_live_legs	user_id	uuid	YES	
+my_parlay_live_legs	game_id	text	YES	
+my_parlay_live_legs	pick	text	YES	
+my_parlay_live_legs	stake	numeric	YES	
+my_parlay_live_legs	bet_status	text	YES	
+my_parlay_live_legs	bet_result	text	YES	
+my_parlay_live_legs	placed_at	timestamp with time zone	YES	
+my_parlay_live_legs	leg_no	bigint	YES	
+my_parlay_live_legs	ticker	text	YES	
+my_parlay_live_legs	side	text	YES	
+my_parlay_live_legs	label	text	YES	
+my_parlay_live_legs	player_name	text	YES	
+my_parlay_live_legs	stat	text	YES	
+my_parlay_live_legs	strike	numeric	YES	
+my_parlay_live_legs	line	numeric	YES	
+my_parlay_live_legs	current	numeric	YES	
+my_parlay_live_legs	final	boolean	YES	
+my_parlay_live_legs	leg_state	text	YES	
+my_parlay_live_legs	live_prob	numeric	YES	
+my_parlay_live_legs	minutes_left	numeric	YES	
+my_parlay_live_legs	team	text	YES	
+my_placed_bets	id	bigint	YES	
+my_placed_bets	user_id	uuid	YES	
+my_placed_bets	market	text	YES	
+my_placed_bets	pick	text	YES	
+my_placed_bets	stake	numeric	YES	
+my_placed_bets	placed_at	timestamp with time zone	YES	
+my_placed_bets	status	text	YES	
+my_placed_bets	result	text	YES	
+my_placed_bets	ticker	text	YES	
+my_placed_bets	side	text	YES	
+my_placed_bets	game_id	text	YES	
+my_placed_bets	bet_group	text	YES	
+my_placed_bets	pick_team	text	YES	
+my_placed_bets	bet_key	text	YES	
+my_placed_bets	intent_key	text	YES	
+my_pnl_curve	id	bigint	YES	
+my_pnl_curve	settled_at	timestamp with time zone	YES	
+my_pnl_curve	pick	text	YES	
+my_pnl_curve	market	text	YES	
+my_pnl_curve	stake	numeric	YES	
+my_pnl_curve	payout	numeric	YES	
+my_pnl_curve	result	text	YES	
+my_pnl_curve	profit	numeric	YES	
+my_pnl_curve	cumulative_profit	numeric	YES	
+my_pnl_curve	cumulative_staked	numeric	YES	
+news_agent_record	season	integer	YES	
+news_agent_record	week	integer	YES	
+news_agent_record	game_id	text	YES	
+news_agent_record	away_team	text	YES	
+news_agent_record	home_team	text	YES	
+news_agent_record	spread_line	numeric	YES	
+news_agent_record	home_score	integer	YES	
+news_agent_record	away_score	integer	YES	
+news_agent_record	net_home_adj	numeric	YES	
+news_agent_record	home_vs_spread	numeric	YES	
+news_agent_record	result	text	YES	
+news_intel	game_id	text	NO	
+news_intel	home_adj_pts	numeric	YES	0
+news_intel	away_adj_pts	numeric	YES	0
+news_intel	home_confidence	numeric	YES	
+news_intel	away_confidence	numeric	YES	
+news_intel	volatility	numeric	YES	
+news_intel	home_items	jsonb	YES	'[]'::jsonb
+news_intel	away_items	jsonb	YES	'[]'::jsonb
+news_intel	game_brief	text	YES	
+news_intel	agent_model	text	YES	
+news_intel	scanned_at	timestamp with time zone	YES	now()
+news_intel_log	game_id	text	NO	
+news_intel_log	home_adj_pts	numeric	YES	0
+news_intel_log	away_adj_pts	numeric	YES	0
+news_intel_log	home_confidence	numeric	YES	
+news_intel_log	away_confidence	numeric	YES	
+news_intel_log	volatility	numeric	YES	
+news_intel_log	home_items	jsonb	YES	'[]'::jsonb
+news_intel_log	away_items	jsonb	YES	'[]'::jsonb
+news_intel_log	game_brief	text	YES	
+news_intel_log	agent_model	text	YES	
+news_intel_log	scanned_at	timestamp with time zone	YES	now()
+news_intel_log	log_id	bigint	NO	nextval('news_intel_log_log_id_seq'::regclass)
+odds_backfill	id	integer	NO	1
+odds_backfill	next_ts	timestamp with time zone	NO	
+odds_backfill	end_ts	timestamp with time zone	NO	
+odds_backfill	step_min	integer	NO	30
+odds_backfill	calls	integer	NO	0
+odds_backfill	rows_saved	integer	NO	0
+odds_backfill	errors	integer	NO	0
+odds_backfill	credits_remaining	bigint	YES	
+odds_backfill	last_error	text	YES	
+odds_backfill	done	boolean	NO	false
+odds_backfill	paused	boolean	NO	false
+odds_backfill	updated_at	timestamp with time zone	YES	now()
+odds_backfill_failed	ts	timestamp with time zone	NO	
+odds_backfill_failed	error	text	YES	
+odds_backfill_failed	tries	integer	YES	1
+odds_backfill_failed	at	timestamp with time zone	YES	now()
+odds_line_history	id	bigint	NO	nextval('odds_line_history_id_seq'::regclass)
+odds_line_history	event_id	text	NO	
+odds_line_history	season	integer	YES	
+odds_line_history	commence_time	timestamp with time zone	YES	
+odds_line_history	home_team	text	YES	
+odds_line_history	away_team	text	YES	
+odds_line_history	snap_at	timestamp with time zone	NO	
+odds_line_history	source	text	NO	'hist'::text
+odds_line_history	books	integer	YES	
+odds_line_history	home_spread_med	numeric	YES	
+odds_line_history	home_spread_min	numeric	YES	
+odds_line_history	home_spread_max	numeric	YES	
+odds_line_history	home_ml_prob_med	numeric	YES	
+odds_line_history	dk_home_spread	numeric	YES	
+odds_line_history	fd_home_spread	numeric	YES	
+overall_picks	season	integer	YES	
+overall_picks	week	integer	YES	
+overall_picks	game_id	text	YES	
+overall_picks	kickoff_utc	timestamp with time zone	YES	
+overall_picks	away_team	text	YES	
+overall_picks	home_team	text	YES	
+overall_picks	ats_pick	text	YES	
+overall_picks	pick_spread	numeric	YES	
+overall_picks	rating	text	YES	
+overall_picks	bet_score	numeric	YES	
+overall_picks	away_score	numeric	YES	
+overall_picks	home_score	numeric	YES	
+overall_picks	result	text	YES	
+overall_picks	status	text	YES	
+panel_outlets	id	integer	NO	nextval('panel_outlets_id_seq'::regclass)
+panel_outlets	outlet	text	NO	
+panel_outlets	search_hint	text	YES	
+panel_outlets	active	boolean	YES	true
+panel_scans	outlet_id	integer	NO	
+panel_scans	season	integer	NO	
+panel_scans	week	integer	NO	
+panel_scans	scanned_at	timestamp with time zone	YES	
+panel_scans	experts_found	integer	YES	
+panel_scans	picks_found	integer	YES	
+panel_scans	notes	text	YES	
+parlay_log	combo_key	text	NO	
+parlay_log	season	integer	YES	
+parlay_log	week	integer	YES	
+parlay_log	legs	integer	YES	
+parlay_log	tickers	_text	YES	
+parlay_log	leg_detail	jsonb	YES	
+parlay_log	our_prob	numeric	YES	
+parlay_log	kalshi_prob	numeric	YES	
+parlay_log	parlay_score	integer	YES	
+parlay_log	logged_at	timestamp with time zone	YES	now()
+parlay_record	combo_key	text	YES	
+parlay_record	season	integer	YES	
+parlay_record	week	integer	YES	
+parlay_record	legs	integer	YES	
+parlay_record	tickers	_text	YES	
+parlay_record	leg_detail	jsonb	YES	
+parlay_record	our_prob	numeric	YES	
+parlay_record	kalshi_prob	numeric	YES	
+parlay_record	parlay_score	integer	YES	
+parlay_record	logged_at	timestamp with time zone	YES	
+parlay_record	result	text	YES	
+pick_clv	ticker	text	YES	
+pick_clv	game_id	text	YES	
+pick_clv	season	integer	YES	
+pick_clv	week	integer	YES	
+pick_clv	bet_label	text	YES	
+pick_clv	grade	text	YES	
+pick_clv	alt_score	integer	YES	
+pick_clv	our_prob	numeric	YES	
+pick_clv	price_at_pick	numeric	YES	
+pick_clv	picked_at	timestamp with time zone	YES	
+pick_clv	closing_prob	numeric	YES	
+pick_clv	clv_pts	numeric	YES	
+pick_clv	beat_close	boolean	YES	
+pick_clv	result	text	YES	
+pick_kalshi_map	season	integer	YES	
+pick_kalshi_map	week	integer	YES	
+pick_kalshi_map	game_id	text	YES	
+pick_kalshi_map	bet_rank	bigint	YES	
+pick_kalshi_map	rank	bigint	YES	
+pick_kalshi_map	ats_pick	text	YES	
+pick_kalshi_map	ats_pick_spread	numeric	YES	
+pick_kalshi_map	rating	text	YES	
+pick_kalshi_map	units	numeric	YES	
+pick_kalshi_map	pick_label	text	YES	
+pick_kalshi_map	ticker	text	YES	
+pick_kalshi_map	event_title	text	YES	
+pick_kalshi_map	market_title	text	YES	
+pick_kalshi_map	side	text	YES	
+pick_kalshi_map	price	numeric	YES	
+pick_kalshi_map	how_to	text	YES	
+pick_kalshi_map	kalshi_url	text	YES	
+pick_kalshi_map	on_kalshi	boolean	YES	
+pick_kalshi_map	push_becomes_win	boolean	YES	
+predictions	game_id	text	NO	
+predictions	model_version	text	YES	
+predictions	model_home_prob	numeric	YES	
+predictions	blend_home_prob	numeric	YES	
+predictions	market_home_prob	numeric	YES	
+predictions	spread_home_prob	numeric	YES	
+predictions	model_margin	numeric	YES	
+predictions	home_cover_prob	numeric	YES	
+predictions	edge_home	numeric	YES	
+predictions	ev_home	numeric	YES	
+predictions	ev_away	numeric	YES	
+predictions	categories	jsonb	YES	
+predictions	top_features	jsonb	YES	
+predictions	home_starters_out	jsonb	YES	
+predictions	away_starters_out	jsonb	YES	
+predictions	home_inj_total	numeric	YES	
+predictions	away_inj_total	numeric	YES	
+predictions	questionable_starters	integer	YES	
+predictions	weather_severity	numeric	YES	
+predictions	early_season	integer	YES	
+predictions	model_market_gap	numeric	YES	
+predictions	updated_at	timestamp with time zone	YES	
+predictions_log	id	bigint	NO	nextval('predictions_log_id_seq'::regclass)
+predictions_log	game_id	text	YES	
+predictions_log	model_version	text	YES	
+predictions_log	model_home_prob	numeric	YES	
+predictions_log	blend_home_prob	numeric	YES	
+predictions_log	market_home_prob	numeric	YES	
+predictions_log	model_margin	numeric	YES	
+predictions_log	home_cover_prob	numeric	YES	
+predictions_log	updated_at	timestamp with time zone	YES	
+private_config	key	text	NO	
+private_config	value	text	NO	
+qb_regular	season	integer	NO	
+qb_regular	team	text	NO	
+qb_regular	player_id	text	YES	
+qb_regular	player_name	text	YES	
+qb_regular	starts	integer	YES	
+qb_regular	dropbacks	integer	YES	
+qb_regular	epa_db	numeric	YES	
+qb_regular	tier	text	YES	
+qb_regular	updated_at	timestamp with time zone	YES	now()
+qb_status	game_id	text	NO	
+qb_status	team	text	NO	
+qb_status	regular_qb	text	YES	
+qb_status	regular_starts	integer	YES	
+qb_status	tier	text	YES	
+qb_status	depth_qb1	text	YES	
+qb_status	qb1_injury	text	YES	
+qb_status	starter_out	boolean	NO	false
+qb_status	pts	numeric	NO	0
+qb_status	detail	text	YES	
+qb_status	checked_at	timestamp with time zone	YES	now()
+research_scorecard	season	integer	YES	
+research_scorecard	week	integer	YES	
+research_scorecard	ats_wins	bigint	YES	
+research_scorecard	ats_losses	bigint	YES	
+research_scorecard	su_wins	bigint	YES	
+research_scorecard	su_losses	bigint	YES	
+research_scorecard	bet_wins	bigint	YES	
+research_scorecard	bet_losses	bigint	YES	
+research_scorecard	units_net	numeric	YES	
+research_scorecard	a_wins	bigint	YES	
+research_scorecard	a_losses	bigint	YES	
+research_scorecard	consensus_wins	bigint	YES	
+research_scorecard	consensus_losses	bigint	YES	
+research_scorecard	kalshi_su_wins	bigint	YES	
+research_scorecard	kalshi_su_losses	bigint	YES	
+research_scorecard	vegas_su_wins	bigint	YES	
+research_scorecard	vegas_su_losses	bigint	YES	
+research_scorecard	news_right	bigint	YES	
+research_scorecard	news_wrong	bigint	YES	
+research_scorecard	alt_wins	bigint	YES	
+research_scorecard	alt_losses	bigint	YES	
+research_scorecard	parlay_wins	bigint	YES	
+research_scorecard	parlay_losses	bigint	YES	
+roll_chains	id	bigint	NO	
+roll_chains	user_id	uuid	NO	
+roll_chains	started_at	timestamp with time zone	NO	now()
+roll_chains	start_stake	numeric	NO	
+roll_chains	legs_target	integer	NO	
+roll_chains	legs_won	integer	NO	0
+roll_chains	current_amount	numeric	NO	
+roll_chains	current_bet_id	bigint	YES	
+roll_chains	status	text	NO	'active'::text
+roll_chains	history	jsonb	NO	'[]'::jsonb
+roll_chains	ended_at	timestamp with time zone	YES	
+shadow_bet_sheet	rank	bigint	YES	
+shadow_bet_sheet	bet_rank	bigint	YES	
+shadow_bet_sheet	season	integer	YES	
+shadow_bet_sheet	week	integer	YES	
+shadow_bet_sheet	slate	text	YES	
+shadow_bet_sheet	game_date_et	date	YES	
+shadow_bet_sheet	kickoff_utc	timestamp with time zone	YES	
+shadow_bet_sheet	game_id	text	YES	
+shadow_bet_sheet	away_team	text	YES	
+shadow_bet_sheet	home_team	text	YES	
+shadow_bet_sheet	predicted_winner	text	YES	
+shadow_bet_sheet	predicted_winner_prob	numeric	YES	
+shadow_bet_sheet	winner_spread	numeric	YES	
+shadow_bet_sheet	winner_moneyline	integer	YES	
+shadow_bet_sheet	ats_pick	text	YES	
+shadow_bet_sheet	ats_pick_spread	numeric	YES	
+shadow_bet_sheet	ats_pick_prob	numeric	YES	
+shadow_bet_sheet	rating	text	YES	
+shadow_bet_sheet	bet_score	integer	YES	
+shadow_bet_sheet	risk_rating	text	YES	
+shadow_bet_sheet	risk_index	numeric	YES	
+shadow_bet_sheet	units	numeric	YES	
+shadow_bet_sheet	consensus_pick	text	YES	
+shadow_bet_sheet	expert_count	bigint	YES	
+shadow_bet_sheet	total_line	numeric	YES	
+shadow_bet_sheet	kalshi_winner	text	YES	
+shadow_bet_sheet	kalshi_winner_prob	numeric	YES	
+shadow_bet_sheet	kalshi_home_prob	numeric	YES	
+shadow_bet_sheet	kalshi_edge_pts	numeric	YES	
+shadow_bet_sheet	pbm_agrees_with_kalshi	boolean	YES	
+shadow_bet_sheet	kalshi_value_side	text	YES	
+shadow_bet_sheet	kalshi_value_pts	numeric	YES	
+shadow_bet_sheet	kalshi_updated_at	timestamp with time zone	YES	
+shadow_bet_sheet	vegas_winner	text	YES	
+shadow_bet_sheet	vegas_winner_prob	numeric	YES	
+shadow_bet_sheet	vegas_home_prob	numeric	YES	
+shadow_bet_sheet	vegas_favorite	text	YES	
+shadow_bet_sheet	vegas_fav_points	numeric	YES	
+shadow_bet_sheet	home_moneyline	integer	YES	
+shadow_bet_sheet	away_moneyline	integer	YES	
+shadow_bet_sheet	vegas_edge_pts	numeric	YES	
+shadow_bet_sheet	pbm_agrees_with_vegas	boolean	YES	
+shadow_game_board	game_id	text	YES	
+shadow_game_board	season	integer	YES	
+shadow_game_board	week	integer	YES	
+shadow_game_board	game_type	text	YES	
+shadow_game_board	kickoff_utc	timestamp with time zone	YES	
+shadow_game_board	slate	text	YES	
+shadow_game_board	game_date_et	date	YES	
+shadow_game_board	home_team	text	YES	
+shadow_game_board	away_team	text	YES	
+shadow_game_board	home_score	integer	YES	
+shadow_game_board	away_score	integer	YES	
+shadow_game_board	stadium	text	YES	
+shadow_game_board	stadium_id	text	YES	
+shadow_game_board	roof	text	YES	
+shadow_game_board	surface	text	YES	
+shadow_game_board	spread_line	numeric	YES	
+shadow_game_board	total_line	numeric	YES	
+shadow_game_board	home_moneyline	integer	YES	
+shadow_game_board	away_moneyline	integer	YES	
+shadow_game_board	home_rest	integer	YES	
+shadow_game_board	away_rest	integer	YES	
+shadow_game_board	home_qb	text	YES	
+shadow_game_board	away_qb	text	YES	
+shadow_game_board	div_game	boolean	YES	
+shadow_game_board	model_home_prob	numeric	YES	
+shadow_game_board	blend_home_prob	numeric	YES	
+shadow_game_board	market_home_prob	numeric	YES	
+shadow_game_board	spread_home_prob	numeric	YES	
+shadow_game_board	model_margin	numeric	YES	
+shadow_game_board	home_cover_prob	numeric	YES	
+shadow_game_board	categories	jsonb	YES	
+shadow_game_board	top_features	jsonb	YES	
+shadow_game_board	home_starters_out	jsonb	YES	
+shadow_game_board	away_starters_out	jsonb	YES	
+shadow_game_board	home_inj_total	numeric	YES	
+shadow_game_board	away_inj_total	numeric	YES	
+shadow_game_board	questionable_starters	integer	YES	
+shadow_game_board	weather_severity	numeric	YES	
+shadow_game_board	early_season	integer	YES	
+shadow_game_board	model_market_gap	numeric	YES	
+shadow_game_board	updated_at	timestamp with time zone	YES	
+shadow_game_board	temp_f	numeric	YES	
+shadow_game_board	wind_mph	numeric	YES	
+shadow_game_board	gust_mph	numeric	YES	
+shadow_game_board	wind_dir	text	YES	
+shadow_game_board	humidity	numeric	YES	
+shadow_game_board	precip_prob	numeric	YES	
+shadow_game_board	pressure_mb	numeric	YES	
+shadow_game_board	short_forecast	text	YES	
+shadow_game_board	indoor	boolean	YES	
+shadow_game_board	weather_source	text	YES	
+shadow_game_board	weather_at	timestamp with time zone	YES	
+shadow_game_board	home_adj_pts	numeric	YES	
+shadow_game_board	away_adj_pts	numeric	YES	
+shadow_game_board	home_confidence	numeric	YES	
+shadow_game_board	away_confidence	numeric	YES	
+shadow_game_board	volatility	numeric	YES	
+shadow_game_board	home_items	jsonb	YES	
+shadow_game_board	away_items	jsonb	YES	
+shadow_game_board	game_brief	text	YES	
+shadow_game_board	scanned_at	timestamp with time zone	YES	
+shadow_game_board	news_pts	numeric	YES	
+shadow_game_board	adj_margin	numeric	YES	
+shadow_game_board	adj_home_cover	numeric	YES	
+shadow_game_board	adj_home_win	numeric	YES	
+shadow_game_board	ats_pick	text	YES	
+shadow_game_board	ats_pick_prob	numeric	YES	
+shadow_game_board	ev_home_adj	numeric	YES	
+shadow_game_board	ev_away_adj	numeric	YES	
+shadow_game_board	risk_index	numeric	YES	
+shadow_game_board	ml_pick	text	YES	
+shadow_game_board	ml_pick_ev	numeric	YES	
+shadow_game_board	raw_score	numeric	YES	
+shadow_game_board	expert_count	bigint	YES	
+shadow_game_board	consensus_pick	text	YES	
+shadow_game_board	consensus_pct	numeric	YES	
+shadow_game_board	consensus_score	integer	YES	
+shadow_game_board	consensus_rating	text	YES	
+shadow_game_board	pbm_agrees_with_experts	boolean	YES	
+shadow_game_board	n_over	bigint	YES	
+shadow_game_board	n_under	bigint	YES	
+shadow_game_board	expert_picks	jsonb	YES	
+shadow_game_board	bet_score	integer	YES	
+shadow_game_board	rating	text	YES	
+shadow_game_board	risk_rating	text	YES	
+shadow_game_board	units	numeric	YES	
+shadow_game_board	predicted_winner	text	YES	
+shadow_game_board	predicted_winner_prob	numeric	YES	
+shadow_game_board	kalshi_home_prob	numeric	YES	
+shadow_game_board	kalshi_winner	text	YES	
+shadow_game_board	kalshi_winner_prob	numeric	YES	
+shadow_game_board	kalshi_home_ask	numeric	YES	
+shadow_game_board	kalshi_away_ask	numeric	YES	
+shadow_game_board	kalshi_updated_at	timestamp with time zone	YES	
+shadow_game_board	kalshi_edge_pts	numeric	YES	
+shadow_game_board	pbm_agrees_with_kalshi	boolean	YES	
+shadow_game_board	kalshi_value_side	text	YES	
+shadow_game_board	kalshi_value_pts	numeric	YES	
+shadow_game_board	vegas_home_prob	numeric	YES	
+shadow_game_board	vegas_winner	text	YES	
+shadow_game_board	vegas_winner_prob	numeric	YES	
+shadow_game_board	vegas_favorite	text	YES	
+shadow_game_board	vegas_fav_points	numeric	YES	
+shadow_game_board	vegas_edge_pts	numeric	YES	
+shadow_game_board	pbm_agrees_with_vegas	boolean	YES	
+shadow_predictions	game_id	text	NO	
+shadow_predictions	model_version	text	YES	
+shadow_predictions	model_home_prob	numeric	YES	
+shadow_predictions	blend_home_prob	numeric	YES	
+shadow_predictions	market_home_prob	numeric	YES	
+shadow_predictions	spread_home_prob	numeric	YES	
+shadow_predictions	model_margin	numeric	YES	
+shadow_predictions	home_cover_prob	numeric	YES	
+shadow_predictions	edge_home	numeric	YES	
+shadow_predictions	ev_home	numeric	YES	
+shadow_predictions	ev_away	numeric	YES	
+shadow_predictions	categories	jsonb	YES	
+shadow_predictions	top_features	jsonb	YES	
+shadow_predictions	home_starters_out	jsonb	YES	
+shadow_predictions	away_starters_out	jsonb	YES	
+shadow_predictions	home_inj_total	numeric	YES	
+shadow_predictions	away_inj_total	numeric	YES	
+shadow_predictions	questionable_starters	integer	YES	
+shadow_predictions	weather_severity	numeric	YES	
+shadow_predictions	early_season	integer	YES	
+shadow_predictions	model_market_gap	numeric	YES	
+shadow_predictions	updated_at	timestamp with time zone	YES	
+shadow_predictions_log	id	bigint	NO	nextval('predictions_log_id_seq'::regclass)
+shadow_predictions_log	game_id	text	YES	
+shadow_predictions_log	model_version	text	YES	
+shadow_predictions_log	model_home_prob	numeric	YES	
+shadow_predictions_log	blend_home_prob	numeric	YES	
+shadow_predictions_log	market_home_prob	numeric	YES	
+shadow_predictions_log	model_margin	numeric	YES	
+shadow_predictions_log	home_cover_prob	numeric	YES	
+shadow_predictions_log	updated_at	timestamp with time zone	YES	
+shadow_sheet_results	game_date_et	date	YES	
+shadow_sheet_results	slate	text	YES	
+shadow_sheet_results	season	integer	YES	
+shadow_sheet_results	week	integer	YES	
+shadow_sheet_results	game_id	text	YES	
+shadow_sheet_results	home_team	text	YES	
+shadow_sheet_results	away_team	text	YES	
+shadow_sheet_results	home_score	integer	YES	
+shadow_sheet_results	away_score	integer	YES	
+shadow_sheet_results	spread_line	numeric	YES	
+shadow_sheet_results	predicted_winner	text	YES	
+shadow_sheet_results	predicted_winner_prob	numeric	YES	
+shadow_sheet_results	week_rank	bigint	YES	
+shadow_sheet_results	ats_pick	text	YES	
+shadow_sheet_results	rating	text	YES	
+shadow_sheet_results	bet_score	integer	YES	
+shadow_sheet_results	risk_rating	text	YES	
+shadow_sheet_results	units	numeric	YES	
+shadow_sheet_results	consensus_pick	text	YES	
+shadow_sheet_results	agrees	boolean	YES	
+shadow_sheet_results	ats_result	text	YES	
+shadow_sheet_results	consensus_result	text	YES	
+shadow_sheet_results	su_result	text	YES	
+shadow_sheet_results	kalshi_winner	text	YES	
+shadow_sheet_results	kalshi_winner_prob	numeric	YES	
+shadow_sheet_results	kalshi_su_result	text	YES	
+shadow_sheet_results	vegas_winner	text	YES	
+shadow_sheet_results	vegas_su_result	text	YES	
+shadow_slate_sheets	game_date_et	date	NO	
+shadow_slate_sheets	slate	text	YES	
+shadow_slate_sheets	season	integer	YES	
+shadow_slate_sheets	week	integer	YES	
+shadow_slate_sheets	is_final	boolean	YES	false
+shadow_slate_sheets	generated_at	timestamp with time zone	YES	now()
+shadow_slate_sheets	payload	jsonb	YES	
+shadow_totals	game_id	text	NO	
+shadow_totals	model_version	text	YES	
+shadow_totals	total_line	numeric	YES	
+shadow_totals	pred_total	numeric	YES	
+shadow_totals	over_prob	numeric	YES	
+shadow_totals	pick	text	YES	
+shadow_totals	pick_prob	numeric	YES	
+shadow_totals	grade	text	YES	
+shadow_totals	updated_at	timestamp with time zone	YES	now()
+shadow_totals_board	season	integer	YES	
+shadow_totals_board	week	integer	YES	
+shadow_totals_board	game_id	text	YES	
+shadow_totals_board	kickoff_utc	timestamp with time zone	YES	
+shadow_totals_board	away_team	text	YES	
+shadow_totals_board	home_team	text	YES	
+shadow_totals_board	total_line	numeric	YES	
+shadow_totals_board	pred_total	numeric	YES	
+shadow_totals_board	over_prob	numeric	YES	
+shadow_totals_board	pick	text	YES	
+shadow_totals_board	pick_prob	numeric	YES	
+shadow_totals_board	grade	text	YES	
+shadow_totals_board	away_score	integer	YES	
+shadow_totals_board	home_score	integer	YES	
+shadow_totals_board	actual_total	integer	YES	
+shadow_totals_board	result	text	YES	
+shadow_totals_board	locked	boolean	YES	
+shadow_totals_board	kalshi_ticker	text	YES	
+shadow_totals_board	kalshi_line	numeric	YES	
+shadow_totals_board	kalshi_side	text	YES	
+shadow_totals_board	kalshi_price	numeric	YES	
+shadow_totals_board	kalshi_how_to	text	YES	
+shadow_totals_board	kalshi_url	text	YES	
+shadow_totals_board	our_prob_at_kalshi	numeric	YES	
+shadow_totals_board	kalshi_updated_at	timestamp with time zone	YES	
+shadow_totals_log	id	bigint	NO	nextval('shadow_totals_log_id_seq'::regclass)
+shadow_totals_log	game_id	text	YES	
+shadow_totals_log	model_version	text	YES	
+shadow_totals_log	total_line	numeric	YES	
+shadow_totals_log	pred_total	numeric	YES	
+shadow_totals_log	over_prob	numeric	YES	
+shadow_totals_log	pick	text	YES	
+shadow_totals_log	pick_prob	numeric	YES	
+shadow_totals_log	grade	text	YES	
+shadow_totals_log	updated_at	timestamp with time zone	YES	now()
+shadow_totals_record	season	integer	YES	
+shadow_totals_record	grade	text	YES	
+shadow_totals_record	wins	bigint	YES	
+shadow_totals_record	losses	bigint	YES	
+shadow_totals_record	pushes	bigint	YES	
+shadow_totals_record	win_pct	numeric	YES	
+shadow_totals_record	units_at_110	numeric	YES	
+sheet_results	game_date_et	date	YES	
+sheet_results	slate	text	YES	
+sheet_results	season	integer	YES	
+sheet_results	week	integer	YES	
+sheet_results	game_id	text	YES	
+sheet_results	home_team	text	YES	
+sheet_results	away_team	text	YES	
+sheet_results	home_score	integer	YES	
+sheet_results	away_score	integer	YES	
+sheet_results	spread_line	numeric	YES	
+sheet_results	predicted_winner	text	YES	
+sheet_results	predicted_winner_prob	numeric	YES	
+sheet_results	week_rank	bigint	YES	
+sheet_results	ats_pick	text	YES	
+sheet_results	rating	text	YES	
+sheet_results	bet_score	integer	YES	
+sheet_results	risk_rating	text	YES	
+sheet_results	units	numeric	YES	
+sheet_results	consensus_pick	text	YES	
+sheet_results	agrees	boolean	YES	
+sheet_results	ats_result	text	YES	
+sheet_results	consensus_result	text	YES	
+sheet_results	su_result	text	YES	
+sheet_results	kalshi_winner	text	YES	
+sheet_results	kalshi_winner_prob	numeric	YES	
+sheet_results	kalshi_su_result	text	YES	
+sheet_results	vegas_winner	text	YES	
+sheet_results	vegas_su_result	text	YES	
+site_pages	slug	text	NO	
+site_pages	title	text	NO	
+site_pages	body_md	text	NO	
+site_pages	sort	integer	NO	0
+site_pages	updated_at	timestamp with time zone	NO	now()
+slate_sheets	game_date_et	date	NO	
+slate_sheets	slate	text	YES	
+slate_sheets	season	integer	YES	
+slate_sheets	week	integer	YES	
+slate_sheets	is_final	boolean	YES	false
+slate_sheets	generated_at	timestamp with time zone	YES	now()
+slate_sheets	payload	jsonb	YES	
+slip_parlays	id	bigint	NO	nextval('slip_parlays_id_seq'::regclass)
+slip_parlays	user_id	uuid	NO	auth.uid()
+slip_parlays	leg_key	text	NO	
+slip_parlays	tickers	_text	NO	
+slip_parlays	legs	jsonb	NO	
+slip_parlays	our_prob	numeric	YES	
+slip_parlays	kalshi_prob	numeric	YES	
+slip_parlays	grade	text	YES	
+slip_parlays	score	integer	YES	
+slip_parlays	bet_amount	numeric	NO	5
+slip_parlays	first_kickoff	timestamp with time zone	YES	
+slip_parlays	added_at	timestamp with time zone	NO	now()
+slip_parlays	auto_added	boolean	NO	false
+slip_parlays	window_opens_at	timestamp with time zone	YES	
+slip_parlays	window_closes_at	timestamp with time zone	YES	
+sportsline_expert_picks	pick_id	text	NO	
+sportsline_expert_picks	abbrev	text	YES	
+sportsline_expert_picks	game_id	text	YES	
+sportsline_expert_picks	expert_id	text	YES	
+sportsline_expert_picks	expert_name	text	YES	
+sportsline_expert_picks	nickname	text	YES	
+sportsline_expert_picks	market	text	YES	
+sportsline_expert_picks	label	text	YES	
+sportsline_expert_picks	odds	integer	YES	
+sportsline_expert_picks	unit	numeric	YES	
+sportsline_expert_picks	subject_id	text	YES	
+sportsline_expert_picks	result_status	text	YES	
+sportsline_expert_picks	streak_label	text	YES	
+sportsline_expert_picks	streak_profit	numeric	YES	
+sportsline_expert_picks	created_at	timestamp with time zone	YES	
+sportsline_expert_picks	captured_at	timestamp with time zone	NO	now()
+sportsline_expert_picks	analysis	text	YES	
+sportsline_projection	abbrev	text	NO	
+sportsline_projection	game_id	text	YES	
+sportsline_projection	captured_at	timestamp with time zone	NO	now()
+sportsline_projection	away_score	integer	YES	
+sportsline_projection	home_score	integer	YES	
+sportsline_projection	spread	jsonb	YES	
+sportsline_projection	moneyline	jsonb	YES	
+sportsline_projection	total	jsonb	YES	
+sportsline_projection	splits	jsonb	YES	
+sportsline_projection_history	abbrev	text	NO	
+sportsline_projection_history	captured_at	timestamp with time zone	NO	now()
+sportsline_projection_history	game_id	text	YES	
+sportsline_projection_history	data	jsonb	YES	
+team_rankings	season	integer	YES	
+team_rankings	team	text	YES	
+team_rankings	as_of_game	text	YES	
+team_rankings	off_epa	numeric	YES	
+team_rankings	def_epa	numeric	YES	
+team_rankings	off_rank	bigint	YES	
+team_rankings	def_rank	bigint	YES	
+team_rankings	off_pass_rank	bigint	YES	
+team_rankings	off_rush_rank	bigint	YES	
+team_rankings	def_pass_rank	bigint	YES	
+team_rankings	def_rush_rank	bigint	YES	
+team_ratings	season	integer	NO	
+team_ratings	team	text	NO	
+team_ratings	as_of_game	text	YES	
+team_ratings	off_epa	numeric	YES	
+team_ratings	def_epa	numeric	YES	
+team_ratings	off_sr	numeric	YES	
+team_ratings	def_sr	numeric	YES	
+team_ratings	off_pass_epa	numeric	YES	
+team_ratings	def_pass_epa	numeric	YES	
+team_ratings	off_rush_epa	numeric	YES	
+team_ratings	def_rush_epa	numeric	YES	
+team_ratings	adot	numeric	YES	
+team_ratings	pythag	numeric	YES	
+team_ratings	winpct17	numeric	YES	
+team_ratings	luck	numeric	YES	
+team_ratings	margin_epa	numeric	YES	
+team_ratings	home_split	numeric	YES	
+team_ratings	road_split	numeric	YES	
+team_ratings	load3	numeric	YES	
+team_records	season	integer	YES	
+team_records	team	text	YES	
+team_records	wins	integer	YES	
+team_records	losses	integer	YES	
+team_records	ties	integer	YES	
+team_records	record	text	YES	
+terms_acceptances	user_id	uuid	NO	
+terms_acceptances	version	text	NO	
+terms_acceptances	accepted_at	timestamp with time zone	NO	now()
+track_record	game_id	text	YES	
+track_record	season	integer	YES	
+track_record	week	integer	YES	
+track_record	game_date_et	date	YES	
+track_record	slate	text	YES	
+track_record	home_team	text	YES	
+track_record	away_team	text	YES	
+track_record	home_score	integer	YES	
+track_record	away_score	integer	YES	
+track_record	spread_line	numeric	YES	
+track_record	model_margin	numeric	YES	
+track_record	home_cover_prob	numeric	YES	
+track_record	model_home_prob	numeric	YES	
+track_record	market_home_prob	numeric	YES	
+track_record	ats_pick	text	YES	
+track_record	ats_result	text	YES	
+track_record	su_result	text	YES	
+view_backups	name	text	YES	
+view_backups	saved_at	timestamp with time zone	YES	now()
+view_backups	definition	text	YES	
+watchdog_alerts	key	text	NO	
+watchdog_alerts	kind	text	NO	
+watchdog_alerts	title	text	NO	
+watchdog_alerts	detail	text	YES	
+watchdog_alerts	first_seen	timestamp with time zone	YES	now()
+watchdog_alerts	last_seen	timestamp with time zone	YES	now()
+watchdog_alerts	last_emailed	timestamp with time zone	YES	
+watchdog_alerts	resolved_at	timestamp with time zone	YES	
+watchdog_alerts	times_emailed	integer	YES	0
+watchdog_state	key	text	NO	
+watchdog_state	value	jsonb	YES	
+watchdog_state	updated_at	timestamp with time zone	YES	now()
+weather	game_id	text	NO	
+weather	source	text	YES	
+weather	indoor	boolean	YES	
+weather	roof_type	text	YES	
+weather	temp_f	numeric	YES	
+weather	wind_mph	numeric	YES	
+weather	gust_mph	numeric	YES	
+weather	wind_dir	text	YES	
+weather	wind_dir_deg	numeric	YES	
+weather	humidity	numeric	YES	
+weather	precip_prob	numeric	YES	
+weather	precip	integer	YES	
+weather	pressure_mb	numeric	YES	
+weather	short_forecast	text	YES	
+weather	hours_to_kickoff	numeric	YES	
+weather	fetched_at	timestamp with time zone	YES	
+week_status	season	integer	YES	
+week_status	week	integer	YES	
+week_status	games	bigint	YES	
+week_status	games_final	bigint	YES	
+week_status	first_kickoff	timestamp with time zone	YES	
+week_status	last_kickoff	timestamp with time zone	YES	
+week_status	week_complete	boolean	YES	
+weekly_scorecard	season	integer	YES	
+weekly_scorecard	week	integer	YES	
+weekly_scorecard	games_scheduled	bigint	YES	
+weekly_scorecard	games_final	bigint	YES	
+weekly_scorecard	week_complete	boolean	YES	
+weekly_scorecard	games_graded	bigint	YES	
+weekly_scorecard	su_wins	bigint	YES	
+weekly_scorecard	su_losses	bigint	YES	
+weekly_scorecard	su_win_pct	numeric	YES	
+weekly_scorecard	top5_su_wins	bigint	YES	
+weekly_scorecard	top5_su_losses	bigint	YES	
+weekly_scorecard	top10_su_wins	bigint	YES	
+weekly_scorecard	top10_su_losses	bigint	YES	
+weekly_scorecard	ats_wins	bigint	YES	
+weekly_scorecard	ats_losses	bigint	YES	
+weekly_scorecard	ats_pushes	bigint	YES	
+weekly_scorecard	ats_win_pct	numeric	YES	
+weekly_scorecard	bet_wins	bigint	YES	
+weekly_scorecard	bet_losses	bigint	YES	
+weekly_scorecard	units_net	numeric	YES	
+weekly_scorecard	a_wins	bigint	YES	
+weekly_scorecard	a_losses	bigint	YES	
+weekly_scorecard	consensus_wins	bigint	YES	
+weekly_scorecard	consensus_losses	bigint	YES	
+weekly_scorecard	kalshi_su_wins	bigint	YES	
+weekly_scorecard	kalshi_su_losses	bigint	YES	
+weekly_scorecard	vegas_su_wins	bigint	YES	
+weekly_scorecard	vegas_su_losses	bigint	YES	
+weekly_scorecard	games	jsonb	YES	
+weighted_consensus	game_id	text	YES	
+weighted_consensus	season	integer	YES	
+weighted_consensus	week	integer	YES	
+weighted_consensus	home_team	text	YES	
+weighted_consensus	away_team	text	YES	
+weighted_consensus	ats_experts	bigint	YES	
+weighted_consensus	ats_panel	bigint	YES	
+weighted_consensus	ats_core	bigint	YES	
+weighted_consensus	weighted_ats_pick	text	YES	
+weighted_consensus	weighted_ats_pct	numeric	YES	
+weighted_consensus	su_experts	bigint	YES	
+weighted_consensus	weighted_su_pick	text	YES	
+weighted_consensus	weighted_su_pct	numeric	YES	
+y_log	game_id	text	NO	
+y_log	team	text	NO	
+y_log	kind	text	NO	
+y_log	seen_at	timestamp with time zone	YES	now()
+y_log	price	numeric	YES	
+y_log	bet_id	bigint	YES	
+y_log	result	text	YES	
+zplus_board	game_id	text	YES	
+zplus_board	season	integer	YES	
+zplus_board	week	integer	YES	
+zplus_board	kickoff_utc	timestamp with time zone	YES	
+zplus_board	home_team	text	YES	
+zplus_board	away_team	text	YES	
+zplus_board	team	text	YES	
+zplus_board	opp	text	YES	
+zplus_board	ticker	text	YES	
+zplus_board	side	text	YES	
+zplus_board	model_prob	numeric	YES	
+zplus_board	ask	numeric	YES	
+zplus_board	gap	numeric	YES	
+zplus_board	fetched_at	timestamp with time zone	YES	
+zplus_board	open	boolean	YES	
+zplus_board	pick_label	text	YES	
+zplus_board	tier	text	YES	
+zplus_board	news_ready	boolean	YES	
+zplus_log	game_id	text	NO	
+zplus_log	team	text	NO	
+zplus_log	season	integer	YES	
+zplus_log	week	integer	YES	
+zplus_log	kickoff_utc	timestamp with time zone	YES	
+zplus_log	ticker	text	YES	
+zplus_log	first_seen	timestamp with time zone	YES	now()
+zplus_log	first_model	numeric	YES	
+zplus_log	first_ask	numeric	YES	
+zplus_log	last_seen	timestamp with time zone	YES	
+zplus_log	last_model	numeric	YES	
+zplus_log	last_ask	numeric	YES	
+zplus_log	result	text	YES	
+zplus_log	tier	text	YES	

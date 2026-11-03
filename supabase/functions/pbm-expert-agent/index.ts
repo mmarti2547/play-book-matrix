@@ -2,10 +2,27 @@
 // Claude agent: finds one handicapper's PUBLICLY posted NFL picks for the current week and stores them.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+// ---- Agent cost tracking (estimates; rates can be changed with secrets PBM_PRICE_IN / PBM_PRICE_OUT per 1M tokens, PBM_PRICE_SEARCH per search) ----
+async function logUsage(agent: string, res: any, ref: string | null = null) {
+  try {
+    const u = res?.usage ?? {};
+    const inTok = (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0);
+    const outTok = u.output_tokens ?? 0;
+    const searches = u.server_tool_use?.web_search_requests ?? 0;
+    const pin = Number(Deno.env.get("PBM_PRICE_IN") ?? "3"), pout = Number(Deno.env.get("PBM_PRICE_OUT") ?? "15");
+    const psearch = Number(Deno.env.get("PBM_PRICE_SEARCH") ?? "0.01");
+    const cost = (inTok / 1e6) * pin + (outTok / 1e6) * pout + searches * psearch;
+    const { createClient: cc } = await import("npm:@supabase/supabase-js@2");
+    const s = cc(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    await s.from("agent_usage").insert({ agent, ref, model: res?.model ?? null, input_tokens: inTok, output_tokens: outTok,
+      web_searches: searches, cost_usd: Math.round(cost * 10000) / 10000 });
+  } catch (_) { /* never let cost logging break an agent */ }
+}
+
 const MODEL = Deno.env.get("PBM_AGENT_MODEL") ?? "claude-sonnet-5";
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-pbm-cron",
 };
 
 async function claude(system: string, prompt: string, maxSearches: number) {
@@ -26,6 +43,7 @@ async function claude(system: string, prompt: string, maxSearches: number) {
     });
     if (!r.ok) throw new Error(`Anthropic ${r.status}: ${await r.text()}`);
     res = await r.json();
+    await logUsage("expert", res);
     if (res.stop_reason !== "pause_turn") break;
     messages.push({ role: "assistant", content: res.content });
   }
@@ -52,8 +70,26 @@ declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
 const json = (o: unknown, status = 200) =>
   new Response(JSON.stringify(o), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
+// Allowed callers: the pg_cron game-day scheduler (x-pbm-cron token), the engine (service role), or a signed-in user.
+async function authorized(req: Request) {
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const cron = req.headers.get("x-pbm-cron");
+  if (cron) {
+    const { data } = await sb.from("private_config").select("value").eq("key", "cron_token").single();
+    return !!data && data.value === cron;
+  }
+  const auth = req.headers.get("Authorization") ?? "";
+  if (auth === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`) return true;
+  const userSb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: auth } },
+  });
+  const { data: u } = await userSb.auth.getUser();
+  return !!u?.user;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (!(await authorized(req))) return json({ ok: false, error: "not authorized" }, 401);
   let body: any = {};
   try { body = await req.json(); } catch { /* empty body */ }
   const job = async () => {

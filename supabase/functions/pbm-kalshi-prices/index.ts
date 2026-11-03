@@ -1,5 +1,6 @@
 // ===== SUPABASE EDGE FUNCTION: pbm-kalshi-prices =====
-// Pulls PUBLIC Kalshi NFL game-winner prices (no account or keys used) into kalshi_markets.
+// Pulls PUBLIC Kalshi NFL prices (no account or keys used): game winners -> kalshi_markets,
+// alternate spread ladders -> kalshi_alt_lines, then freezes graded props/parlays for the record.
 // Safe to call often: it refreshes at most once per 60 seconds.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -18,6 +19,24 @@ const num = (d: unknown, c: unknown) => (d != null && d !== "" ? Number(d) : c !
 const px = (bid: number | null, ask: number | null, last: number | null) =>
   bid && ask && ask > bid ? (bid + ask) / 2 : last || ask || bid || null;
 
+async function fetchEvents(series: string) {
+  const out: any[] = [];
+  let cursor = "";
+  for (let page = 0; page < 8; page++) {
+    const r = await fetch(`${BASE}/events?series_ticker=${series}&status=open&with_nested_markets=true&limit=200${cursor ? "&cursor=" + cursor : ""}`);
+    if (!r.ok) throw new Error(`Kalshi ${series} ${r.status}: ${(await r.text()).slice(0, 200)}`);
+    const d = await r.json();
+    out.push(...(d.events ?? []));
+    cursor = d.cursor;
+    if (!cursor) break;
+  }
+  return out;
+}
+const evDateOf = (ticker: string) => {
+  const m = String(ticker).match(/-(\d{2})([A-Z]{3})(\d{2})/);
+  return m ? Date.parse(`20${m[1]}-${MON[m[2]]}-${m[3]}T12:00:00Z`) : NaN;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
@@ -30,16 +49,7 @@ Deno.serve(async (req) => {
       .is("home_score", null).gte("game_date_et", today).order("game_date_et").limit(64);
     if (!games?.length) return json({ ok: true, updated: 0, note: "no upcoming games" });
 
-    const events: any[] = [];
-    let cursor = "";
-    for (let page = 0; page < 5; page++) {
-      const r = await fetch(`${BASE}/events?series_ticker=KXNFLGAME&status=open&with_nested_markets=true&limit=200${cursor ? "&cursor=" + cursor : ""}`);
-      if (!r.ok) throw new Error(`Kalshi ${r.status}: ${(await r.text()).slice(0, 200)}`);
-      const d = await r.json();
-      events.push(...(d.events ?? []));
-      cursor = d.cursor;
-      if (!cursor) break;
-    }
+    const events = await fetchEvents("KXNFLGAME");
 
     const rows: any[] = [];
     for (const ev of events) {
@@ -68,7 +78,33 @@ Deno.serve(async (req) => {
       for (const d of [...new Set(games.filter((g) => rows.some((r) => r.game_id === g.game_id)).map((g) => g.game_date_et))])
         await sb.rpc("snapshot_slate", { d });
     }
-    return json({ ok: true, events: events.length, updated: rows.length });
+
+    // ---- Alternate spread ladders (KXNFLSPREAD): YES = team wins by more than floor_strike ----
+    const spreadEvents = await fetchEvents("KXNFLSPREAD");
+    const alt: any[] = [];
+    for (const ev of spreadEvents) {
+      const evDate = evDateOf(ev.event_ticker);
+      const mk = (ev.markets ?? []).map((x: any) => ({ ...x, team: norm(String(x.ticker).split("-").pop()!.replace(/\d+$/, "")) }));
+      const g = games.find((g) => Math.abs(Date.parse(g.game_date_et + "T12:00:00Z") - evDate) <= 86400e3 &&
+        mk.some((x: any) => x.team === g.home_team) && mk.some((x: any) => x.team === g.away_team));
+      if (!g) continue;
+      for (const x of mk) {
+        if (x.floor_strike == null || (x.team !== g.home_team && x.team !== g.away_team)) continue;
+        alt.push({
+          ticker: x.ticker, game_id: g.game_id, event_ticker: ev.event_ticker, team: x.team, threshold: Number(x.floor_strike),
+          yes_bid: num(x.yes_bid_dollars, x.yes_bid), yes_ask: num(x.yes_ask_dollars, x.yes_ask),
+          last_price: num(x.last_price_dollars, x.last_price), volume: Number(x.volume_fp ?? x.volume ?? 0),
+          open_interest: Number(x.open_interest_fp ?? x.open_interest ?? 0), status: x.status, fetched_at: new Date().toISOString(),
+          event_title: ev.title ?? null, market_title: x.yes_sub_title ?? x.title ?? null,
+        });
+      }
+    }
+    for (let i = 0; i < alt.length; i += 500) {
+      const { error } = await sb.from("kalshi_alt_lines").upsert(alt.slice(i, i + 500));
+      if (error) throw error;
+    }
+    const { error: logErr } = await sb.rpc("log_alt_picks");
+    return json({ ok: true, events: events.length, updated: rows.length, alt_events: spreadEvents.length, alt_lines: alt.length, log_error: logErr?.message ?? null });
   } catch (err) {
     return json({ ok: false, error: String(err instanceof Error ? err.message : err) }, 500);
   }

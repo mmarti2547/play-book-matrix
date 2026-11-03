@@ -2,6 +2,23 @@
 // Claude news agent: researches both teams for one game and writes a sourced brief + bounded point adjustment.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+// ---- Agent cost tracking (estimates; rates can be changed with secrets PBM_PRICE_IN / PBM_PRICE_OUT per 1M tokens, PBM_PRICE_SEARCH per search) ----
+async function logUsage(agent: string, res: any, ref: string | null = null) {
+  try {
+    const u = res?.usage ?? {};
+    const inTok = (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0);
+    const outTok = u.output_tokens ?? 0;
+    const searches = u.server_tool_use?.web_search_requests ?? 0;
+    const pin = Number(Deno.env.get("PBM_PRICE_IN") ?? "3"), pout = Number(Deno.env.get("PBM_PRICE_OUT") ?? "15");
+    const psearch = Number(Deno.env.get("PBM_PRICE_SEARCH") ?? "0.01");
+    const cost = (inTok / 1e6) * pin + (outTok / 1e6) * pout + searches * psearch;
+    const { createClient: cc } = await import("npm:@supabase/supabase-js@2");
+    const s = cc(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    await s.from("agent_usage").insert({ agent, ref, model: res?.model ?? null, input_tokens: inTok, output_tokens: outTok,
+      web_searches: searches, cost_usd: Math.round(cost * 10000) / 10000 });
+  } catch (_) { /* never let cost logging break an agent */ }
+}
+
 const MODEL = Deno.env.get("PBM_AGENT_MODEL") ?? "claude-sonnet-5";
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -10,8 +27,7 @@ const cors = {
 
 async function claude(system: string, prompt: string, maxSearches: number) {
   const messages: any[] = [{ role: "user", content: prompt }];
-  let res: any = null;
-  for (let i = 0; i < 4; i++) {
+  const call = async (withTools: boolean) => {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -22,23 +38,57 @@ async function claude(system: string, prompt: string, maxSearches: number) {
       body: JSON.stringify({
         model: MODEL, max_tokens: 6000, system, messages,
         tools: [{ type: "web_search_20260318", name: "web_search", max_uses: maxSearches, response_inclusion: "excluded" }],
+        ...(withTools ? {} : { tool_choice: { type: "none" } }),
       }),
     });
     if (!r.ok) throw new Error(`Anthropic ${r.status}: ${await r.text()}`);
-    res = await r.json();
+    const out = await r.json();
+    await logUsage("news", out);
+    return out;
+  };
+  const textOf = (res: any) => (res?.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+  const hasJson = (t: string) => t.indexOf("{") >= 0 && t.lastIndexOf("}") > t.indexOf("{");
+  let res: any = null;
+  for (let i = 0; i < 8; i++) {
+    res = await call(true);
     if (res.stop_reason !== "pause_turn") break;
     messages.push({ role: "assistant", content: res.content }); // continue a paused search turn
   }
-  const text = res.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
-  const a = text.indexOf("{"), b = text.lastIndexOf("}");
-  if (a < 0 || b < 0) throw new Error("Agent returned no JSON: " + text.slice(0, 300));
-  return JSON.parse(text.slice(a, b + 1));
+  let text = textOf(res);
+  if (!hasJson(text)) {
+    // The agent finished (or paused) without the JSON: ask once more, no tools, for the JSON only.
+    messages.push({ role: "assistant", content: res.content });
+    messages.push({ role: "user", content: "Stop searching now. Using what you found, return ONLY the JSON object in the required format." });
+    res = await call(false);
+    text = textOf(res);
+  }
+  const parse = (t: string) => {
+    const a = t.indexOf("{"), b = t.lastIndexOf("}");
+    if (a < 0 || b < 0) throw new Error("Agent returned no JSON: " + t.slice(0, 300));
+    return JSON.parse(t.slice(a, b + 1));
+  };
+  try { return parse(text); }
+  catch (e) {
+    // 2026-10-04: the agent sometimes returns slightly broken JSON (a missing comma, a stray quote). Ask once, no tools, for a corrected copy.
+    // fresh single-turn request (no tools, no earlier tool blocks) that only repairs the JSON text
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 6000,
+        messages: [{ role: "user", content: `This JSON is invalid (${String(e).slice(0, 120)}). Return ONLY the same object, unchanged in content, as strictly valid JSON (double-quoted keys and strings, commas between items, no comments, no trailing commas):\n\n${text}` }] }),
+    });
+    if (!r.ok) throw new Error(`Anthropic ${r.status}: ${await r.text()}`);
+    const fixed = await r.json();
+    await logUsage("news", fixed);
+    return parse(textOf(fixed));
+  }
 }
 
 const SYSTEM = `You are the Play Book Matrix NFL intelligence analyst. You research news that could change how a
 team performs in its next game and quantify it for a betting model that already knows season-long efficiency
 (EPA, success rate), official injury designations, weather, rest and travel. Only report what the model cannot see.
 
+On game day, first check the official inactives list (released 90 minutes before kickoff) for both teams.
 Look for, within the last 10 days: late injury changes and game-time decisions, practice reports, players ruled
 out after the final report, suspensions, arrests or legal trouble, personal and family events reported in the press
 (divorce, bereavement, birth of a child, car accident, illness in the family), holdouts and contract disputes,
@@ -79,6 +129,11 @@ Deno.serve(async (req) => {
 async function run(body: any) {
     const { game_id } = body;
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // Lessons the weekly learning review has CONFIRMED in 3+ separate weeks (candidates are never used)
+    const { data: lessons } = await sb.from("agent_lessons").select("lesson").eq("status", "active")
+      .in("applies_to", ["news", "all"]).order("confirmations", { ascending: false }).limit(8);
+    const system = SYSTEM + ((lessons ?? []).length ? "\n\nLessons learned from past weeks (each confirmed in 3+ separate weeks; apply only when relevant to this game):\n" +
+      (lessons ?? []).map((l: any) => "- " + l.lesson).join("\n") : "");
     const { data: g, error } = await sb.from("games").select("*").eq("game_id", game_id).single();
     if (error || !g) throw new Error("game not found: " + game_id);
     const { data: p } = await sb.from("predictions")
@@ -97,7 +152,7 @@ Research both teams now. Return JSON:
 {"home":{"adjustment_pts":0,"confidence":0.5,"items":[{"player":"","category":"injury|personal|legal|off_field|coaching|locker_room|contract|travel|motivation|other","headline":"","summary":"","impact":"negative|positive|neutral","severity":1,"source_name":"","source_url":"","published":"YYYY-MM-DD"}]},
  "away":{...same...},"volatility":0.3,"game_brief":"4-6 sentence betting-focused preview of what matters in this game"}`;
 
-    const out = await claude(SYSTEM, prompt, 10);
+    const out = await claude(system, prompt, 10);
     const clamp = (x: number) => Math.max(-3, Math.min(3, Number(x) || 0));
     const row = {
       game_id,
