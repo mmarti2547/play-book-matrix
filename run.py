@@ -16,7 +16,7 @@ from pbm.config import MODEL_VERSION
 warnings.filterwarnings("ignore")
 
 FIRST_SEASON = 2014
-BLEND_ALPHA = 0.30  # weight on the model when blending with the no-vig market for moneyline EV
+BLEND_ALPHA = 0.10  # weight on the model vs the no-vig market. 2026-11-09 backtest (2019-25, 1,865 games): market alone is best (Brier .2100), 0.10 costs almost nothing (.2102), the old 0.30 was worse (.2115)
 
 CATEGORY = {}
 for f in F.FEATURES:
