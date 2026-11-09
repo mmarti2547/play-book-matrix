@@ -180,8 +180,13 @@ def game_context(sched: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFrame:
     g["temp_f"] = g.temp
     g["wind_mph"] = g.wind
     g.loc[g.indoor == 1, ["temp_f", "wind_mph", "humidity", "precip"]] = [70, 0, 45, 0]
-    g["away_travel_mi"] = [haversine_miles(TEAM_HOME.get(t, ""), s) for t, s in zip(g.away_team, g.stadium_id)]
-    g["home_travel_mi"] = [haversine_miles(TEAM_HOME.get(t, ""), s) for t, s in zip(g.home_team, g.stadium_id)]
+    # relocated franchises traveled from their OLD home in those seasons (codes are now the current franchise code)
+    old_home = {"LV": ("OAK", 2019), "LAC": ("SD", 2016), "LA": ("STL", 2015)}
+    def base(t, season):
+        o = old_home.get(t)
+        return TEAM_HOME.get(o[0] if o and season <= o[1] else t, "")
+    g["away_travel_mi"] = [haversine_miles(base(t, yr), s) for t, yr, s in zip(g.away_team, g.season, g.stadium_id)]
+    g["home_travel_mi"] = [haversine_miles(base(t, yr), s) for t, yr, s in zip(g.home_team, g.season, g.stadium_id)]
     g["home_travel_mi"] = g.home_travel_mi.fillna(0)
     g["rest_diff"] = g.home_rest - g.away_rest
     g["neutral"] = (g.location == "Neutral").astype(int)
