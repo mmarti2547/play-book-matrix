@@ -5,7 +5,7 @@
 //  2) ESPN live box scores and game clocks
 //  3) For every player line: his normal game (Kalshi's pre-game line, frozen at kickoff; history if none), what he has now, minutes left
 //     -> projected final and the chance he finishes over / under, vs Kalshi's price -> grade
-//  4) The best 4- and 5-leg parlays across ALL games, graded
+//  4) The best 3-, 4- and 5-leg parlays across ALL games: honest chances, legs that win together, never under 55%
 //  5) Logs every A / A+ leg and parlay the first time it appears, and grades them when the games end
 // Model settings come from the 2021-2025 test (jamie/pace_backtest.py): a fast or slow start counts, but the
 // player's normal game still carries most of the weight for the rest of the game.
@@ -266,6 +266,9 @@ async function run(sb: any, force: boolean) {
       }
     }
     if (!best) continue;
+    // 2026-11-09 HONEST chance: on 19,000 graded legs, when our model was at or above Kalshi's price the leg hit at Kalshi's price
+    // minus about 1 point (the model added nothing beyond the price). So the chance we show and grade on is the price - 1 pt.
+    best.our_prob = r2(Math.max(0.02, best.price - 0.01), 4);
     legs.push({ ...best, game_id: g.game_id, matchup: `${g.away_team} @ ${g.home_team}`, player_key: pk, player_name: L.name,
       team: pk.split("|")[0], stat: L.stat, grade: ck.state === "in" ? grade(best.our_prob, best.edge) : "PASS",   // graded in-game only
       current: now_v, projected: r2(proj, 1),
@@ -323,33 +326,71 @@ async function run(sb: any, force: boolean) {
     }
     return pick.length === n ? { pick, games: gcount.size } : null;
   };
-  const toPar = (kind: string, n: number, r: { pick: any[]; games: number }, relaxed: boolean) => {
-    const prob = r.pick.reduce((p, l) => p * l.our_prob, 1), cost = r.pick.reduce((p, l) => p * l.price, 1);
-    return { kind, n_legs: n, legs: r.pick.map(legOut), our_prob: r2(prob, 4), cost: r2(cost, 4), payout_multiple: r2(1 / cost, 1),
-      grade: parlayGrade(prob, cost), games: r.games, relaxed, updated_at: started };
+  // 2026-11-09 "legs that win together". Measured on every pair of graded legs from the same game (Oct 11 - Nov 8, 70 games):
+  // how often both hit vs their honest chances multiplied. Only HALF of each measured boost is used, to stay on the safe side.
+  //   unders on opposite teams + a QB passing under 1.19 -> 1.09 | unders on opposite teams 1.057 -> 1.03
+  //   unders same team 1.037 / over+under same team 1.039 -> 1.02 | over+under opposite teams 1.021 -> 1.01
+  //   overs on opposite teams 0.959 and a QB vs his own pass-catcher in opposite directions 0.839 -> never paired.
+  // Legs from different games are treated as unrelated (factor 1).
+  const MIN_PARLAY = 0.55;   // Michael 2026-11-09: never show a parlay under a 55% chance to win
+  const pairF = (a: any, b: any): number | null => {
+    if (a.game_id !== b.game_id) return 1;
+    const sameTeam = a.team === b.team, hasQB = a.stat === "pass_yds" || b.stat === "pass_yds";
+    if (sameTeam && hasQB && a.side !== b.side) return null;
+    if (a.side === "no" && b.side === "no") return !sameTeam ? (hasQB ? 1.09 : 1.03) : 1.02;
+    if (a.side === "yes" && b.side === "yes") return sameTeam ? 1 : null;
+    return sameTeam ? 1.02 : 1.01;
   };
-  const buildSet = (cands: any[], mayRelax: boolean) => {
-    const out: any[] = [];
-    // 2026-10-26: the most likely legs first, and NO leg in two cards (one bad leg used to sink 2-3 parlays at once).
-    // The 3-leg gets the 3 strongest legs, the 4-leg the next strongest, and so on.
-    const used = new Set<string>();
-    const free = (l: any) => !used.has(l.player_key);
-    const byProb = (a: any, b: any) => b.our_prob - a.our_prob || b.edge - a.edge;
-    const strictAll = cands.filter((l) => ok(l, 0.72, 0.002)).sort(byProb);
-    const looseAll = cands.filter((l) => ok(l, 0.65, 0.002)).sort(byProb);
-    for (const n of [3, 4, 5]) {
-      let r = pickLegs(strictAll.filter(free), n), relaxed = false;
-      if (!r && mayRelax) { r = pickLegs(looseAll.filter(free), n); relaxed = true; }
-      if (r) { out.push(toPar("safe", n, r, relaxed)); for (const l of r.pick) used.add(l.player_key); }
+  const jointProb = (pick: any[]): number | null => {
+    let p = pick.reduce((x, l) => x * l.our_prob, 1);
+    const perGame = new Map<string, number>();
+    for (const l of pick) perGame.set(l.game_id, (perGame.get(l.game_id) ?? 0) + 1);
+    for (let i = 0; i < pick.length; i++) for (let j = i + 1; j < pick.length; j++) {
+      const f = pairF(pick[i], pick[j]);
+      if (f == null) return null;
+      if (f !== 1) p *= f ** (1 / Math.max(1, (perGame.get(pick[i].game_id) ?? 2) - 1));   // don't double-count a game's boost
     }
-    // Jamie's Big Coin Flip Payout: 4 legs priced like coin flips (40-62 cents) where our chance beats the price by 6+ points.
-    // Pays roughly 8-15x; hits maybe 1 time in 6-10 - only worth it when the legs are truly underpriced.
-    const byRatio = (a: any, b: any) => b.our_prob / b.price - a.our_prob / a.price;
-    const flipS = cands.filter((l) => free(l) && l.price >= 0.40 && l.price <= 0.65 && ok(l, 0.45, 0.01)).sort(byRatio);
-    const flipL = cands.filter((l) => free(l) && l.price >= 0.35 && l.price <= 0.70 && ok(l, 0.40, 0.002)).sort(byRatio);
-    let f = pickLegs(flipS, 4), fRelaxed = false;
-    if (!f && mayRelax) { f = pickLegs(flipL, 4); fRelaxed = true; }
-    if (f) out.push(toPar("big", 4, f, fRelaxed));
+    return Math.min(0.97, p);
+  };
+  const toPar = (kind: string, n: number, r: { pick: any[]; games: number; prob: number }, relaxed: boolean) => {
+    const cost = r.pick.reduce((p, l) => p * l.price, 1);
+    return { kind, n_legs: n, legs: r.pick.map(legOut), our_prob: r2(r.prob, 4), cost: r2(cost, 4), payout_multiple: r2(1 / cost, 1),
+      grade: r.prob >= 0.65 ? "A+" : "A", games: r.games, relaxed, updated_at: started };
+  };
+  // best n-leg set (highest real chance that ALL hit) from the strongest candidates; null if none reaches 55%
+  const bestCombo = (pool: any[], n: number) => {
+    const c = pool.slice(0, n >= 5 ? 18 : n === 4 ? 24 : 30);
+    let best: { pick: any[]; prob: number } | null = null;
+    const pick: any[] = [];
+    const rec = (start: number) => {
+      if (pick.length === n) {
+        const p = jointProb(pick);
+        if (p != null && p >= MIN_PARLAY && (!best || p > best.prob)) best = { pick: [...pick], prob: p };
+        return;
+      }
+      for (let i = start; i < c.length; i++) {
+        if (pick.some((x) => x.player_key === c[i].player_key)) continue;
+        // prune: even with the biggest boost this branch can't beat the best found
+        const ub = [...pick, c[i]].reduce((x, l) => x * l.our_prob, 1) * (c[i + 1]?.our_prob ?? 0) ** (n - pick.length - 1) * 1.3;
+        if (best && ub < best.prob) continue;
+        pick.push(c[i]); rec(i + 1); pick.pop();
+      }
+    };
+    rec(0);
+    if (!best) return null;
+    const b = best as { pick: any[]; prob: number };
+    return { pick: b.pick, prob: b.prob, games: new Set(b.pick.map((l) => l.game_id)).size };
+  };
+  const buildSet = (cands: any[], _mayRelax: boolean) => {
+    const out: any[] = [];
+    // no player in two cards (one bad leg used to sink 2-3 parlays at once); 3-leg first, then 4 and 5 from what's left
+    const used = new Set<string>();
+    const pool = cands.filter((l) => l.our_prob >= 0.70).sort((a, b) => b.our_prob - a.our_prob);
+    for (const n of [3, 4, 5]) {
+      const r = bestCombo(pool.filter((l) => !used.has(l.player_key)), n);
+      if (r) { out.push(toPar("safe", n, r, false)); for (const l of r.pick) used.add(l.player_key); }
+    }
+    // Big Coin Flip retired 2026-11-09: it never reaches a 55% chance (it hit 9 of 202).
     return out;
   };
   const liveGames = [...new Set(inPlay.map((l) => l.game_id))];
