@@ -6,3 +6,7 @@ update model_params set value = 0.20, default_value = 0.20 where key = 'ats_shri
 select cron.schedule('pbm-health', '7 6,13 * * *', $$select net.http_post(url:='https://ljlzpysnikwbhspzlpmu.supabase.co/functions/v1/pbm-health', headers:=jsonb_build_object('Content-Type','application/json','x-pbm-cron',(select value from private_config where key='cron_token')), body:='{}'::jsonb, timeout_milliseconds:=30000)$$);
 -- view: products = Game winners (board), Spread picks (board), Jamie legs (A+ to B), Jamie parlays (not Big Coin Flip),
 -- and "Your bets: ..." from my_bets by type. Status (n>=10): Red if hit < said-8pts or return < -15%; Yellow if hit < said-4 or return < -5%.
+
+-- 2026-11-10: Jamie legs / Jamie parlays rows count only results since 2026-11-09 (new honest system); old view saved in view_backups.
+-- (applied via replace(): adds "AND logged_at >= '2026-11-09 05:00:00+00'" to both Jamie selects)
+update model_health_state set status = 'Not enough yet', changed_at = now() where product in ('Jamie legs (A+ to B)','Jamie parlays');
