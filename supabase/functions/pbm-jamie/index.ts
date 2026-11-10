@@ -90,8 +90,9 @@ function etDateCode(iso: string) {
 // (our model blended with Kalshi's price - see JAMIE_W). A leg priced above our chance is never better than D.
 // Checked on 11,107 graded legs: calibrated 81% -> hit 81%, 89% -> hit 93%.
 function grade(prob: number, edge: number) {
-  if (edge < 0) return "F";
-  if (edge < 0.002) return "D";
+  // 2026-11-09: only legs where our model is clearly BELOW Kalshi's price are F (those hit well under the price);
+  // otherwise the grade is the honest chance (Kalshi's price minus 1 pt) - a model "edge" added nothing.
+  if (edge < -0.03) return "F";
   if (prob >= 0.85) return "A+";
   if (prob >= 0.78) return "A";
   if (prob >= 0.72) return "B+";
@@ -257,8 +258,11 @@ async function run(sb: any, force: boolean) {
         // legs where the model was most wrong (edge 10+ said 64%, hit 50% = Kalshi's 49c). Now: the most likely rung with real value.
         const cal = JAMIE_W * prob + (1 - JAMIE_W) * price;
         const edge = cal - price;
-        if (edge <= 0) continue;
-        if (!best || cal > best.our_prob) {
+        // 2026-11-09: keep rungs where our model agrees with the price or is higher (within 3 pts below is "agree");
+        // on 19,000 graded legs those all hit at the price - requiring the model to be ABOVE the price only threw away
+        // the safest rungs and left too few 70%+ legs to build a 55%+ parlay.
+        if (prob < price - 0.03) continue;
+        if (!best || price > best.price) {
           const n = Math.round(r.strike + 0.5);
           best = { ticker: r.ticker, strike: r.strike, side, our_prob: r2(cal, 4), model_prob: r2(prob, 4), price, edge: r2(edge, 4),
                    label: side === "yes" ? `${L.name} ${n}+ ${WORD[L.stat]}` : `${L.name} under ${n} ${WORD[L.stat]}` };
