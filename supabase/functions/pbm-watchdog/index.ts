@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
   }
 
   // ---- 4) Kalshi: connection + orders the app did not place
-  const au = await call("pbm-kalshi", { action: "audit_orders", hours: 26 });
+  const au = await call("pbm-audit", { hours: 26 });   // 2026-11-13 matches by order id (pbm-kalshi audit_orders missed 2nd buys on the same market)
   if (!au.ok || au.data?.ok === false) issues.push({ key: "kalshi:connection", kind: "health", title: "Can't reach your Kalshi account",
     detail: `Kalshi check failed: ${esc(String(au.data?.error ?? au.status)).slice(0, 200)}. The Auto Trader can't bet or settle until this works.` });
   else for (const o of au.data?.unknown ?? []) {
