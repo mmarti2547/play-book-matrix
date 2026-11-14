@@ -37,7 +37,10 @@ async function claude(system: string, prompt: string, maxSearches: number) {
       },
       body: JSON.stringify({
         model: MODEL, max_tokens: 6000, system, messages,
-        tools: [{ type: "web_search_20260318", name: "web_search", max_uses: maxSearches, response_inclusion: "excluded" }],
+        // 2026-11-14: results are INCLUDED again. With response_inclusion "excluded" the reply carries code_execution
+        // tool-use blocks without their results, and sending that reply back (pause_turn / "return the JSON") failed with
+        // Anthropic 400 "code_execution tool use ... without a corresponding code_execution_tool_result" (WAS@NYG 11/12: 3 of 5 runs).
+        tools: [{ type: "web_search_20260318", name: "web_search", max_uses: maxSearches }],
         ...(withTools ? {} : { tool_choice: { type: "none" } }),
       }),
     });
@@ -49,16 +52,21 @@ async function claude(system: string, prompt: string, maxSearches: number) {
   const textOf = (res: any) => (res?.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
   const hasJson = (t: string) => t.indexOf("{") >= 0 && t.lastIndexOf("}") > t.indexOf("{");
   let res: any = null;
+  const t0 = Date.now();
   for (let i = 0; i < 8; i++) {
     res = await call(true);
     if (res.stop_reason !== "pause_turn") break;
+    if (Date.now() - t0 > 200_000) break;   // 2026-11-14: stay inside the edge function's time limit (a 6.6-min run was cut off 11/12)
     messages.push({ role: "assistant", content: res.content }); // continue a paused search turn
   }
   let text = textOf(res);
   if (!hasJson(text)) {
     // The agent finished (or paused) without the JSON: ask once more, no tools, for the JSON only.
-    messages.push({ role: "assistant", content: res.content });
-    messages.push({ role: "user", content: "Stop searching now. Using what you found, return ONLY the JSON object in the required format." });
+    // Only the text blocks go back (never half-finished search/code blocks, which the API rejects).
+    const notes = (res?.content ?? []).filter((b: any) => b.type === "text" && b.text);
+    if (notes.length) messages.push({ role: "assistant", content: notes });
+    messages.push({ role: "user", content: (notes.length ? "" : "(Your searches above were cut short.) ") +
+      "Stop searching now. Using what you found, return ONLY the JSON object in the required format." });
     res = await call(false);
     text = textOf(res);
   }
@@ -152,7 +160,7 @@ Research both teams now. Return JSON:
 {"home":{"adjustment_pts":0,"confidence":0.5,"items":[{"player":"","category":"injury|personal|legal|off_field|coaching|locker_room|contract|travel|motivation|other","headline":"","summary":"","impact":"negative|positive|neutral","severity":1,"source_name":"","source_url":"","published":"YYYY-MM-DD"}]},
  "away":{...same...},"volatility":0.3,"game_brief":"4-6 sentence betting-focused preview of what matters in this game"}`;
 
-    const out = await claude(system, prompt, 10);
+    const out = await claude(system, prompt, 8);   // 2026-11-14: 10 -> 8 searches so a run fits the time limit
     const clamp = (x: number) => Math.max(-3, Math.min(3, Number(x) || 0));
     const row = {
       game_id,
