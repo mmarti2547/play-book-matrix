@@ -56,7 +56,7 @@ async function claude(system: string, prompt: string, maxSearches: number) {
   for (let i = 0; i < 8; i++) {
     res = await call(true);
     if (res.stop_reason !== "pause_turn") break;
-    if (Date.now() - t0 > 200_000) break;   // 2026-11-14: stay inside the edge function's time limit (a 6.6-min run was cut off 11/12)
+    if (Date.now() - t0 > 110_000) break;   // 2026-11-14: a worker is stopped about 200s after it starts (runs were cut off 11/12 and 11/14)
     messages.push({ role: "assistant", content: res.content }); // continue a paused search turn
   }
   let text = textOf(res);
@@ -160,7 +160,7 @@ Research both teams now. Return JSON:
 {"home":{"adjustment_pts":0,"confidence":0.5,"items":[{"player":"","category":"injury|personal|legal|off_field|coaching|locker_room|contract|travel|motivation|other","headline":"","summary":"","impact":"negative|positive|neutral","severity":1,"source_name":"","source_url":"","published":"YYYY-MM-DD"}]},
  "away":{...same...},"volatility":0.3,"game_brief":"4-6 sentence betting-focused preview of what matters in this game"}`;
 
-    const out = await claude(system, prompt, 8);   // 2026-11-14: 10 -> 8 searches so a run fits the time limit
+    const out = await claude(system, prompt, 6);   // 2026-11-14: 10 -> 6 searches so a run fits the time limit
     const clamp = (x: number) => Math.max(-3, Math.min(3, Number(x) || 0));
     const row = {
       game_id,
