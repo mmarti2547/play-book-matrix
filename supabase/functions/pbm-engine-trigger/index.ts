@@ -29,32 +29,6 @@ async function gh(method: string, path: string, body?: unknown) {
 }
 
 
-declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
-// Re-run the Claude news/injury agent for games whose news is older than that game's inactives (kickoff - 90 min).
-async function refreshNews(sb: any, onlySlot?: string | null) {
-  const now = Date.now();
-  let q = sb.from("games").select("game_id,kickoff_utc").is("home_score", null)
-    .gt("kickoff_utc", new Date(now).toISOString()).lt("kickoff_utc", new Date(now + 3 * 3600e3).toISOString());
-  if (onlySlot) q = q.eq("kickoff_utc", onlySlot);
-  const { data: games } = await q;
-  const ids = (games ?? []).map((g: any) => g.game_id);
-  if (!ids.length) return [];
-  const { data: intel } = await sb.from("news_intel").select("game_id,scanned_at").in("game_id", ids);
-  const last: Record<string, number> = {};
-  for (const r of intel ?? []) last[r.game_id] = new Date(r.scanned_at).getTime();
-  const due = (games ?? []).filter((g: any) => {
-    const inactives = new Date(g.kickoff_utc).getTime() - 90 * 60e3;
-    return now >= inactives && !(last[g.game_id] >= inactives);
-  }).map((g: any) => g.game_id);
-  const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/pbm-news-agent`;
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const one = (game_id: string) => fetch(url, { method: "POST",
-    headers: { Authorization: `Bearer ${key}`, apikey: key, "Content-Type": "application/json" },
-    body: JSON.stringify({ game_id }) }).then((r) => r.status).catch((e) => String(e));
-  for (let i = 0; i < due.length; i += 6) await Promise.all(due.slice(i, i + 6).map(one));
-  return due;
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -99,13 +73,21 @@ Deno.serve(async (req) => {
       return json({ status: r.status, body: (await r.text()).slice(0, 1500) });
     }
 
-    if (action === "news") {
-      EdgeRuntime.waitUntil(refreshNews(sb, body.slot ?? null));
-      return json({ ok: true, news_refresh: "started" });
+    // 2026-11-14 one game, in the background (the news agent answers 202 and keeps working up to ~400s).
+    // Used by the pbm-news-queue cron (pbm_news_next), which starts one game at a time.
+    if (action === "news_one" && body.game_id) {
+      const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/pbm-news-agent`, { method: "POST",
+        headers: { Authorization: `Bearer ${key}`, apikey: key, "Content-Type": "application/json" },
+        body: JSON.stringify({ game_id: body.game_id }) });
+      return json({ ok: r.ok, status: r.status });
     }
 
-    // action "run": always refresh the news agents for games past their inactives (GitHub's agent step skips news under 6h old)
-    EdgeRuntime.waitUntil(refreshNews(sb, null));
+    // 2026-11-14 "news" (watchdog) and "run" no longer fire several scans at once: scans started together share one
+    // worker and were cut off together. The pbm-news-queue cron now scans every game past inactives, one at a time.
+    if (action === "news") {
+      return json({ ok: true, news_refresh: "queued (pbm-news-queue scans one game at a time)" });
+    }
     // then start the GitHub engine (model + injuries + weather), unless one is already queued/running
     const cur = await gh("GET", `/actions/workflows/${WORKFLOW}/runs?per_page=1`);
     const last = cur.data?.workflow_runs?.[0];

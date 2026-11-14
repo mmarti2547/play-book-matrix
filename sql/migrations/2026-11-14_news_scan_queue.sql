@@ -26,8 +26,8 @@ begin
   select value into tok from private_config where key = 'cron_token';
   insert into news_requests (game_id, reason) values (g.game_id, g.reason);
   perform net.http_post(url := 'https://ljlzpysnikwbhspzlpmu.supabase.co/functions/v1/pbm-engine-trigger',
-    body := jsonb_build_object('action', 'news_test', 'game_id', g.game_id),
-    headers := jsonb_build_object('Content-Type', 'application/json', 'x-pbm-cron', tok), timeout_milliseconds := 170000);
+    body := jsonb_build_object('action', 'news_one', 'game_id', g.game_id),
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-pbm-cron', tok), timeout_milliseconds := 20000);
   return 'started ' || g.game_id || ' (' || g.reason || ')';
 end $$;
 
