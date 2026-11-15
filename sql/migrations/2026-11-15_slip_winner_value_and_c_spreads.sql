@@ -6,3 +6,5 @@
 -- 2) step 1 (main spread picks): C-graded spread picks always go on the slip at the user's C max (default $5);
 --    the Auto Better still follows its own include_c switch.
 --    where (p.rating in ('A+','A') or (p.rating='B+' and u.inc_bp) or (p.rating='B' and u.inc_b) or p.rating='C') ...
+-- 3) 2026-11-15 13:00 owner rule: every auto-filled slip bet must pay at least 0.9x profit ($100 wins $90+)
+--    -> price <= 0.526 on main picks, winner picks, props, and slip parlays (kalshi_prob).
