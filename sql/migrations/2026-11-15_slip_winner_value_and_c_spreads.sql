@@ -1,0 +1,8 @@
+-- ===== PSQL WINDOW =====
+-- 2026-11-15 applied live via replace() on pg_get_functiondef (backups in public.view_backups):
+-- 1) pbm_fill_bet_slip step 1b (winner picks): only when our chance beats Kalshi's price by 3+ pts and price <= 85c
+--    (was: value >= 0, price < 95c -> e.g. $199 on BUF at 91c to win $19.71).
+--    where ... w.price <= 0.85 and coalesce(w.winner_value_pts, -1) >= 3
+-- 2) step 1 (main spread picks): C-graded spread picks always go on the slip at the user's C max (default $5);
+--    the Auto Better still follows its own include_c switch.
+--    where (p.rating in ('A+','A') or (p.rating='B+' and u.inc_bp) or (p.rating='B' and u.inc_b) or p.rating='C') ...
