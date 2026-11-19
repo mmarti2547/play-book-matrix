@@ -6,3 +6,5 @@ alter table public.bet_cart add column if not exists value_pts numeric;   -- our
 -- and at the end fills bet_cart.value_pts:
 --   moneyline -> game_board.winner_value_pts; main_pick -> (ats_pick_prob - limit_price)*100; alt_line -> (alt_best_bets.our_prob - limit_price)*100
 -- Front end (Lovable d91eaba): UNDERPRICED (>= +3, green glow), FAIR PRICE (0..3, amber), OVERPRICED (< 0, red glow).
+-- 2026-11-19 later: PASS-graded spread picks go on the slip when our cover chance >= Kalshi price (stake = C max),
+-- unless the game already has an A/A+ winner pick (the winner pick keeps the game's one slot). Backup: 'before PASS spreads with value, 11/19'.
